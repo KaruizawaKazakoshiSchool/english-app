@@ -103,17 +103,14 @@ export const CategoryDashboard: React.FC = () => {
           <h2 style={{ margin: 0 }}>モンスターバトル</h2>
         </div>
 
-        {/* 「文をつくることば」は質問に1語で答える形にならないので、QAモードは出さない */}
-        {decodedCategory !== '文をつくることば' && (
-          <div 
-            className="glass-card flex-col flex-center animate-pop" 
-            style={{ padding: '2rem', cursor: 'pointer', background: 'rgba(253, 121, 168, 0.2)' }}
-            onClick={() => navigate(`/dictionary/${category}/game/qa`)}
-          >
-            <MessageCircleQuestion size={48} color="var(--color-primary)" style={{ marginBottom: '1rem' }} />
-            <h2 style={{ margin: 0 }}>QAモード</h2>
-          </div>
-        )}
+        <div 
+          className="glass-card flex-col flex-center animate-pop" 
+          style={{ padding: '2rem', cursor: 'pointer', background: 'rgba(253, 121, 168, 0.2)' }}
+          onClick={() => navigate(`/dictionary/${category}/game/qa`)}
+        >
+          <MessageCircleQuestion size={48} color="var(--color-primary)" style={{ marginBottom: '1rem' }} />
+          <h2 style={{ margin: 0 }}>QAモード</h2>
+        </div>
 
         <div 
           className="glass-card flex-col flex-center animate-pop" 

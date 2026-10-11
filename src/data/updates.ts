@@ -14,6 +14,10 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-10-11', text: '❓「文をつくることば」にも QAモードが 出たよ（Who is he? → He is my brother. のように 文で答える）', fromVoice: true },
+  { date: '2026-10-11', text: '🔍 言葉さがしに ▶スタートボタンが ついたよ。押すまで 時間は はからないよ', fromVoice: true },
+  { date: '2026-10-11', text: '🍽️ 辞書に「キッチン＋」（salt・soy sauce・spoon・chopsticks・cookie など19こ）が ふえたよ', fromVoice: true },
+  { date: '2026-10-11', text: '👋 AI英会話で、相手が「さよなら」を言ったら 会話が おしまいになるようにしたよ', fromVoice: true },
   { date: '2026-10-09', text: '🧩 辞書に「文をつくることば」（I・you・this・is・what など21こ）が ふえたよ', fromVoice: true },
   { date: '2026-10-09', text: '🏅 称号が 名前の上に 出るようになったよ', fromVoice: true },
   { date: '2026-10-09', text: '🔥 選択（ハード）をクリアすると、ハードのほうに ✅ が付くようにしたよ', fromVoice: true },

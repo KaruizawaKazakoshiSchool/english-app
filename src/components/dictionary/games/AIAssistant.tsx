@@ -8,7 +8,7 @@ import { useSpeechSynthesis } from '../../../hooks/useSpeechSynthesis';
 import { usePoints } from '../../../hooks/usePoints';
 import { Button } from '../../ui/Button';
 import { MicButton } from '../../ui/MicButton';
-import { ArrowLeft, Send, Sparkles, Coins, HelpCircle, Languages, Trophy } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Coins, HelpCircle, Languages, Trophy, RefreshCw } from 'lucide-react';
 import { SAFETY_INSTRUCTION, isInappropriate } from '../../../lib/contentFilter';
 import { DIALOGUES } from '../../dialogue/dialogueData';
 import { isOverCap, incUsage } from '../../../lib/apiUsage';
@@ -699,6 +699,15 @@ export const AIAssistant: React.FC = () => {
   }
 
   const scenario = activeScenario || SCENARIOS[mode];
+  // AIが「さよなら」を言ったら会話はおしまい。入力欄をしまって、クリアの条件か次の一手を出す。
+  // （子どもの声 2026-10-11「終わることがない会話…一生 Goodbye! しか言ってない」）
+  const lastModel = [...messages].reverse().find(m => m.role === 'model');
+  const ended = messages.some(m => m.role === 'user') && !isAiThinking && !!lastModel && /\b(good ?bye|bye|see you)\b/i.test(lastModel.text);
+  const restartChat = () => {
+    if (!mode) return;
+    localStorage.removeItem(`ai_hist_${studentId}_${mode}_${activeOptsRef.current?.histSuffix || 'default'}_${eiken}`);
+    initChat(mode, activeOptsRef.current);
+  };
 
   return (
     <div className="flex-col" style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}>
@@ -824,18 +833,30 @@ export const AIAssistant: React.FC = () => {
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="glass-card" style={{ padding: '0.8rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <MicButton isRecording={isRecording} onClick={onMicClick} />
-          <Button variant="outline" onClick={() => setShowHelp(h => !h)} icon={HelpCircle} style={{ padding: '0.6rem 1rem' }}>ヘルプ</Button>
-          <form onSubmit={(e) => { e.preventDefault(); handleSend(inputText); }} style={{ display: 'flex', flex: 1, gap: '0.5rem', minWidth: '220px' }}>
-            <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} placeholder="ここに入力 or マイク/ヘルプ"
-              style={{ flex: 1, padding: '0.8rem 1rem', fontSize: '1.1rem', borderRadius: '20px', border: '1px solid #ccc' }} />
-            <Button type="submit" disabled={isAiThinking || !inputText.trim() || (isTeam && !currentSpeaker)} style={{ borderRadius: '20px', padding: '0.8rem 1.2rem' }} icon={Send}>送る</Button>
-          </form>
+      {ended && (
+        <div className="glass-card animate-pop" style={{ padding: '1rem', textAlign: 'center', border: `2px solid ${cleared ? 'var(--color-success)' : 'var(--color-accent)'}` }}>
+          <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.4rem' }}>👋 会話は ここで おしまい！</div>
+          {!cleared && (
+            <div style={{ color: '#7a5a00', marginBottom: '0.6rem' }}>まだクリアになっていないよ。ミッションを たしかめて、もう一度 やってみよう：<br /><b>{scenario.goalLabel}</b></div>
+          )}
+          <Button onClick={restartChat} icon={RefreshCw}>{cleared ? 'もう一度 話す' : 'もう一度 はじめから'}</Button>
         </div>
-      </div>
+      )}
+
+      {/* Input Area */}
+      {!ended && (
+        <div className="glass-card" style={{ padding: '0.8rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <MicButton isRecording={isRecording} onClick={onMicClick} />
+            <Button variant="outline" onClick={() => setShowHelp(h => !h)} icon={HelpCircle} style={{ padding: '0.6rem 1rem' }}>ヘルプ</Button>
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(inputText); }} style={{ display: 'flex', flex: 1, gap: '0.5rem', minWidth: '220px' }}>
+              <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} placeholder="ここに入力 or マイク/ヘルプ"
+                style={{ flex: 1, padding: '0.8rem 1rem', fontSize: '1.1rem', borderRadius: '20px', border: '1px solid #ccc' }} />
+              <Button type="submit" disabled={isAiThinking || !inputText.trim() || (isTeam && !currentSpeaker)} style={{ borderRadius: '20px', padding: '0.8rem 1.2rem' }} icon={Send}>送る</Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

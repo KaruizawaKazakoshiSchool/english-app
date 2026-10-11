@@ -9,7 +9,35 @@ import { ArrowLeft, Volume2, Star, Trophy, RefreshCw, Mic, Keyboard } from 'luci
 import { usePoints } from '../../../hooks/usePoints';
 import { useDictionaryProgress } from '../../../hooks/useDictionaryProgress';
 
-const getQuestionForPhrase = (keyPhrase: string, category?: string) => {
+// 「文をつくることば」は1語の質問の型に当てはまらないので、語ごとに質問を持つ（子どもの声 2026-10-11「Q and A モードが出てない！」）。
+// 「（英語で たずねよう）」で始まるものは、答えが質問文になる語（what・where…）。日本語なので読み上げない。
+const SENTENCE_QA: Record<string, string> = {
+  'I': 'Can you swim?',
+  you: 'Nice to meet you.',
+  he: 'Who is he?',
+  she: 'Who is she?',
+  we: 'What do you and your friends play?',
+  they: 'Where are your friends?',
+  it: 'Is this your pen?',
+  this: 'What is this?',
+  that: 'What is that?',
+  my: 'Whose bag is this?',
+  your: 'Is this my pen?',
+  am: 'Are you happy?',
+  is: 'Is she your sister?',
+  are: 'Are they your friends?',
+  what: '（英語で たずねよう）どんな食べ物が好き？',
+  where: '（英語で たずねよう）駅はどこ？',
+  who: '（英語で たずねよう）かれは だれ？',
+  when: '（英語で たずねよう）誕生日は いつ？',
+  how: '（英語で たずねよう）元気？',
+  and: 'What animals do you like?',
+  not: 'Are you hungry?',
+};
+const isJapanesePrompt = (q: string) => q.startsWith('（');
+
+const getQuestionForPhrase = (keyPhrase: string, category?: string, english?: string) => {
+  if (category === '文をつくることば' && english && SENTENCE_QA[english]) return SENTENCE_QA[english];
   if (category === '教科') return "What subject do you like?";
   if (category === 'スポーツ') return "What sport do you like?";
   if (category === '動物') return "What animal do you like?";
@@ -36,12 +64,13 @@ const getQuestionForPhrase = (keyPhrase: string, category?: string) => {
 };
 
 // Tolerant match helper
-const checkAnswer = (input: string, expectedPhrase: string, targetWord: string) => {
+const checkAnswer = (input: string, expectedPhrase: string, targetWord: string, strict = false) => {
   const normalize = (s: string) => {
     return s.toLowerCase()
       .replace(/\bi am\b/g, 'im')
+      .replace(/\bit is\b/g, 'its')
       .replace(/\bi would\b/g, 'id')
-      .replace(/['.,!?〜◯\-]/g, '') // ignore punctuation
+      .replace(/['’.,!?〜◯\-]/g, '') // ignore punctuation
       .replace(/\b(a|an|the)\b/g, '') // ignore articles safely
       .replace(/\s+/g, ''); // ignore all spaces properly
   };
@@ -54,6 +83,7 @@ const checkAnswer = (input: string, expectedPhrase: string, targetWord: string) 
   // Also just checking if the target word is in the input as a fallback for extreme tolerance
   const normTarget = normalize(targetWord);
   
+  if (strict) return normInput === normExpected;   // I・it・is のような短い語は「含んでいれば正解」だと何でも通るので、文ごと合わせる
   return normInput === normExpected || (normInput.includes(normTarget) && normInput.length > normTarget.length);
 };
 
@@ -103,7 +133,7 @@ export const QAMode: React.FC = () => {
     setTranscript('');
     
     setTimeout(() => {
-      speak(getQuestionForPhrase(target.keyPhrase, target.category));
+      { const q = getQuestionForPhrase(target.keyPhrase, target.category, target.english); if (!isJapanesePrompt(q)) speak(q); }
     }, 500);
   }, [speak, setTranscript]);
 
@@ -116,7 +146,7 @@ export const QAMode: React.FC = () => {
   // Voice checking
   useEffect(() => {
     if (difficulty === 'voice' && transcript && targetWord && !showAnswerState && !showCorrectMark) {
-      if (checkAnswer(transcript, targetWord.keyPhrase, targetWord.english)) {
+      if (checkAnswer(transcript, targetWord.keyPhrase, targetWord.english, targetWord.category === '文をつくることば')) {
         stopListening();
         handleCorrectAnswer();
       } else if (transcript.length > 5) {
@@ -189,7 +219,7 @@ export const QAMode: React.FC = () => {
     if (showAnswerState || !targetWord) return;
     if (!typingInput.trim()) return;
 
-    if (checkAnswer(typingInput, targetWord.keyPhrase, targetWord.english)) {
+    if (checkAnswer(typingInput, targetWord.keyPhrase, targetWord.english, targetWord.category === '文をつくることば')) {
       handleCorrectAnswer();
     } else {
       handleMistake();
@@ -296,8 +326,9 @@ export const QAMode: React.FC = () => {
 
   if (!targetWord) return null;
 
-  const questionText = getQuestionForPhrase(targetWord.keyPhrase, targetWord.category);
-  const expectedAnswer = targetWord.keyPhrase.replace(/◯◯/g, targetWord.english);
+  const questionText = getQuestionForPhrase(targetWord.keyPhrase, targetWord.category, targetWord.english);
+  const expectedRaw = targetWord.keyPhrase.replace(/◯◯/g, targetWord.english);
+  const expectedAnswer = expectedRaw.charAt(0).toUpperCase() + expectedRaw.slice(1);   // 「he is…」→「He is…」
 
   return (
     <div className="flex-col flex-center gap-lg" style={{ minHeight: '100%', width: '100%' }}>
@@ -324,13 +355,15 @@ export const QAMode: React.FC = () => {
       </div>
 
       <div className="flex-col flex-center gap-md" style={{ background: 'rgba(255,255,255,0.8)', padding: '2rem', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '600px', border: '2px solid var(--color-primary)' }}>
-        <Button 
-          onClick={() => speak(questionText)} 
-          icon={Volume2}
-          variant="outline"
-        >
-          質問をきく
-        </Button>
+        {!isJapanesePrompt(questionText) && (
+          <Button 
+            onClick={() => speak(questionText)} 
+            icon={Volume2}
+            variant="outline"
+          >
+            質問をきく
+          </Button>
+        )}
         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-primary)', textAlign: 'center' }}>
           {questionText}
         </div>

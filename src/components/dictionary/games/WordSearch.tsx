@@ -115,6 +115,8 @@ export const WordSearch: React.FC = () => {
 
   // Time Attack State
   const [startTime, setStartTime] = useState<number | null>(null);
+  // スタートを押すまで盤を見せず、時計も動かさない（子どもの声 2026-10-11「いきなり始まって記録が変になると嫌」）
+  const [started, setStarted] = useState(false);
   const [elapsedMs, setElapsedMs] = useState<number>(0);
   const lockPaused = useLockPause(setStartTime); // ロック中は時計を止める
   const [finalTime, setFinalTime] = useState<number | null>(null);
@@ -154,7 +156,8 @@ export const WordSearch: React.FC = () => {
     setSelectionStart(null);
     setShowCelebration(false);
     setEarnedPoints(null);
-    setStartTime(Date.now());
+    setStartTime(null);
+    setStarted(false);
     setElapsedMs(0);
     setFinalTime(null);
     setIsNewRecord(false);
@@ -313,6 +316,24 @@ export const WordSearch: React.FC = () => {
           <Button onClick={() => navigate(`/dictionary/${category}`)}>別のモードを選ぶ</Button>
           <Button onClick={() => navigate('/home')} variant="outline">ホームにもどる</Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!started) {
+    return (
+      <div className="flex-col flex-center gap-lg" style={{ minHeight: '60vh', textAlign: 'center' }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
+          <Button variant="outline" onClick={goBack} icon={ArrowLeft}>もどる</Button>
+        </div>
+        <h1 className="text-primary" style={{ margin: 0 }}>言葉さがし：{decodeURIComponent(category || '')}</h1>
+        <p style={{ fontSize: '1.1rem', color: '#475569', margin: 0 }}>スタートを押すと 盤が出て、時間を はかり始めるよ ⏱️</p>
+        <button
+          onClick={() => { setStarted(true); setStartTime(Date.now()); }}
+          style={{ padding: '1rem 3rem', fontSize: '1.6rem', fontWeight: 'bold', borderRadius: '999px', border: 'none',
+            background: 'var(--color-primary)', color: 'white', cursor: 'pointer', boxShadow: '0 6px 18px rgba(0,0,0,0.2)' }}>
+          ▶ スタート
+        </button>
       </div>
     );
   }
