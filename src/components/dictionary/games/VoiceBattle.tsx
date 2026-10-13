@@ -64,12 +64,15 @@ export const VoiceBattle: React.FC = () => {
 
   const DEFAULT_TOTAL_QUESTIONS = 10;
   // 今日の発音チェックの残りに合わせて体数を決める（子どもの声 2026-09-15
-  // 「最後の一問！って時に上限で終わるのが嫌」）。残りが少ない日は短いバトルにして、
-  // 途中で切れずに最後まで終われるようにする。言い直しのぶんは少し余裕をみる。
+  // 「最後の一問！って時に上限で終わるのが嫌」）。残りが少ない日は短いバトルにする。
+  // それでも言い直しで足りなくなることがあったので、始めたバトルは上限を越えても終われる（graceExtra）。
   const azureLeft = React.useMemo(() => remaining('azure'), []);
   const byBudget = azureLeft === null ? DEFAULT_TOTAL_QUESTIONS : Math.floor(azureLeft * 0.8);
   const TOTAL_QUESTIONS = Math.max(3, Math.min(DEFAULT_TOTAL_QUESTIONS, words.length || DEFAULT_TOTAL_QUESTIONS, byBudget || DEFAULT_TOTAL_QUESTIONS));
   const tooFewLeft = azureLeft !== null && azureLeft <= 0;
+  // 残りがあるうちに始めたバトルは、途中で上限に来ても最後まで終われるようにする。
+  // 1体につき最大3回言い直せるので、その分（＋聞き取れなかった分の少し）までは上限を越えてよい。
+  const graceExtra = tooFewLeft ? 0 : TOTAL_QUESTIONS * 3 + 5;
   const PASS_MARK = Math.max(1, Math.floor(TOTAL_QUESTIONS * 0.8));
 
   useEffect(() => {
@@ -137,7 +140,7 @@ export const VoiceBattle: React.FC = () => {
   const handleAzureAttempt = useCallback(async () => {
     if (!targetWord || monsterState !== 'idle' || isAssessing) return;
 
-    const result = await assess(targetWord.english);
+    const result = await assess(targetWord.english, { graceExtra });
     if (!result) {
       // 採点に失敗（聞き取れず/設定ミス/通信エラー）。ノーカウントで、その場に通知して再挑戦を促す。
       showToast(getLastError() || '🎙️ 声が聞こえなかったよ。もう一度ゆっくり言ってみてね', 'fail');
@@ -164,7 +167,7 @@ export const VoiceBattle: React.FC = () => {
         setTimeout(() => speak(targetWord.english), 700);
       }
     }
-  }, [targetWord, monsterState, isAssessing, assess, setTranscript, speak, proceedToNextTurn, mistakes, addScore, PASS_SCORE]);
+  }, [targetWord, monsterState, isAssessing, assess, setTranscript, speak, proceedToNextTurn, mistakes, addScore, PASS_SCORE, graceExtra]);
 
   const handleSkip = useCallback(() => {
     if (!targetWord || monsterState !== 'idle') return;

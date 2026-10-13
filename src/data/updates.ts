@@ -14,6 +14,7 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-10-14', text: '👾 モンスターバトルは、始めたら 最後まで できるようにしたよ（とちゅうで「今日ぶんは終わり」にならない）', fromVoice: true },
   { date: '2026-10-11', text: '❓「文をつくることば」にも QAモードが 出たよ（Who is he? → He is my brother. のように 文で答える）', fromVoice: true },
   { date: '2026-10-11', text: '🔍 言葉さがしに ▶スタートボタンが ついたよ。押すまで 時間は はからないよ', fromVoice: true },
   { date: '2026-10-11', text: '🍽️ 辞書に「キッチン＋」（salt・soy sauce・spoon・chopsticks・cookie など19こ）が ふえたよ', fromVoice: true },

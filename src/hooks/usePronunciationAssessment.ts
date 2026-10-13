@@ -1,7 +1,7 @@
 import { micPermissionHelp } from './useSpeechRecognition';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
-import { isOverCap, incUsage } from '../lib/apiUsage';
+import { isOverCap, incUsage, getUsage, getCap } from '../lib/apiUsage';
 import { logVoiceEvent, azureCode } from '../lib/voiceLog';
 import { showToast } from '../components/ui/Toast';
 import { fetchAzureSpeechToken, ProxyError } from '../lib/aiProxy';
@@ -230,9 +230,12 @@ export const usePronunciationAssessment = () => {
   }, []);
 
   const assess = useCallback(
-    async (referenceText: string): Promise<PronunciationResult | null> => {
+    async (referenceText: string, opts?: { graceExtra?: number }): Promise<PronunciationResult | null> => {
       // 1日の発音チェック上限に達していたら、Azureを呼ばずに止める（課金の安全装置）。
-      if (isOverCap('azure')) {
+      // graceExtra：上限より前に始めたバトルは、上限を少し越えても最後まで終われる（子どもの声 2026-10-14
+      // 「後一個だったのにー！」）。越えてよいのは graceExtra 回まで（無限には使えない）。
+      const inGrace = !!opts?.graceExtra && getCap('azure') > 0 && getUsage('azure') < getCap('azure') + opts.graceExtra;
+      if (isOverCap('azure') && !inGrace) {
         // 「⚠️Azureエラー」と並べると子どもには意味が伝わらない（子どもの声 2026-09-16）。
         // 故障ではなく「今日ぶんを使い切った」ことと、代わりにできることを伝える。
         setError(CAP_NOTICE);
