@@ -142,8 +142,10 @@ export const VoiceBattle: React.FC = () => {
 
     const result = await assess(targetWord.english, { graceExtra });
     if (!result) {
-      // 採点に失敗（聞き取れず/設定ミス/通信エラー）。ノーカウントで、その場に通知して再挑戦を促す。
-      showToast(getLastError() || '🎙️ 声が聞こえなかったよ。もう一度ゆっくり言ってみてね', 'fail');
+      // 採点に失敗（聞き取れず/設定ミス/通信エラー）。ノーカウントで再挑戦を促す。
+      // 理由はマイクの上の文（azureError）に出る。ポップアップも出すと同じ文が2つ並ぶので出さない（子どもの声 2026-10-15）。
+      // 文が出ない場合だけ、ポップアップで知らせる。
+      if (!getLastError() && !azureError) showToast('🎙️ 声が聞こえなかったよ。もう一度ゆっくり言ってみてね', 'fail');
       return;
     }
 
@@ -167,7 +169,7 @@ export const VoiceBattle: React.FC = () => {
         setTimeout(() => speak(targetWord.english), 700);
       }
     }
-  }, [targetWord, monsterState, isAssessing, assess, setTranscript, speak, proceedToNextTurn, mistakes, addScore, PASS_SCORE, graceExtra]);
+  }, [targetWord, monsterState, isAssessing, assess, setTranscript, speak, proceedToNextTurn, mistakes, addScore, PASS_SCORE, graceExtra, azureError, getLastError]);
 
   const handleSkip = useCallback(() => {
     if (!targetWord || monsterState !== 'idle') return;
@@ -367,7 +369,7 @@ export const VoiceBattle: React.FC = () => {
               wordBreak: 'break-word'
             }}
           >
-            {azureError.startsWith('🌙') ? azureError : `⚠️ Azureエラー: ${azureError}`}
+            {/^[🌙🎙️📶⏳🔑]/u.test(azureError) ? azureError : `🎙️ ${azureError}`}
           </div>
         )}
       </div>
