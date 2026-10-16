@@ -111,6 +111,11 @@ export const DialogueTrainer: React.FC = () => {
   if (!dialogue) {
     // アーカイブ中の単元は一覧に出さない（URL直指定では今までどおり開ける＝先生が配信できる）
     const list = DIALOGUES.filter(d => d.grade === grade && !isArchived(d.id));
+    // クリア済みの会話に印をつける（子どもの声 2026-10-17「クリア済みが見た目で分からない」）。
+    // クリア＝自分の役のセリフを全部読んだ（dialogue_◯◯ の合格回数が1以上）
+    let counts: Record<string, number> = {};
+    try { counts = JSON.parse(localStorage.getItem(`clearCounts_${localStorage.getItem('studentId')}`) || '{}'); } catch { /* 空のまま */ }
+    const isDone = (id: string) => (counts[`dialogue_${id}`] || 0) > 0;
     return (
       <div className="flex-col gap-lg" style={{ flex: 1, padding: '2rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -119,8 +124,11 @@ export const DialogueTrainer: React.FC = () => {
         </div>
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
           {list.map(d => (
-            <div key={d.id} className="glass-card hover-scale" style={{ padding: '1.5rem', cursor: 'pointer', border: '2px solid #e2e8f0', background: 'white' }} onClick={() => setSearchParams({ grade: String(d.grade), id: d.id })}>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)' }}>{d.unitName}</h4>
+            <div key={d.id} className="glass-card hover-scale" style={{ position: 'relative', padding: '1.5rem', cursor: 'pointer', border: isDone(d.id) ? '2px solid var(--color-success)' : '2px solid #e2e8f0', background: isDone(d.id) ? '#f0fdf4' : 'white' }} onClick={() => setSearchParams({ grade: String(d.grade), id: d.id })}>
+              {isDone(d.id) && (
+                <span style={{ position: 'absolute', top: '0.6rem', right: '0.7rem', background: 'var(--color-success)', color: 'white', borderRadius: '999px', padding: '0.1rem 0.6rem', fontSize: '0.8rem', fontWeight: 'bold' }}>✅ クリア</span>
+              )}
+              <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)', paddingRight: isDone(d.id) ? '4.5rem' : 0 }}>{d.unitName}</h4>
               <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>“{d.targetPhrase}”</p>
             </div>
           ))}
