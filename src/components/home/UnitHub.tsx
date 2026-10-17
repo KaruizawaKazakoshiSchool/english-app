@@ -22,7 +22,8 @@ const unitLabel = (kind: ItemKind, done: number, total: number) => {
   if (total === 0) return '';
   if (done >= total) return kind === 'dictionary' ? 'マスター！' : 'クリア！';
   if (kind === 'dictionary') return `${done} / ${total} モード`;
-  if (kind === 'ai') return done === 1 ? 'クリア（ボーナスまだ）' : 'まだ';
+  // 「クリア（ボーナスまだ）」が意味不明と言われた（子どもの声 2026-10-17）。クリアは済み・もう一歩でボーナス、と分かる言い方に
+  if (kind === 'ai') return done === 1 ? 'クリア！ ⭐ボーナスにも ちょうせんできるよ' : 'まだ';
   return 'まだ';
 };
 

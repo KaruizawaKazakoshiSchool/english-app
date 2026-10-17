@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { ClassGate } from './components/auth/ClassGate';
 import { loadRoster } from './data/students';
 import { Layout } from './components/layout/Layout';
 import { Home } from './components/home/Home';
 import { Stage } from './components/stage/Stage';
+
+// ステージを id ごとに作り直す（「次のステージへ」で /stage/8 → /stage/9 に移ったとき、前のクリア画面が残らないように）
+const StageRoute = () => { const { id } = useParams<{ id: string }>(); return <Stage key={id} />; };
 import { Certificate } from './components/certificate/Certificate';
 import { Login } from './components/auth/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -88,7 +91,7 @@ const App: React.FC = () => {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/home" element={<Home />} />
-            <Route path="/stage/:id" element={<Stage />} />
+            <Route path="/stage/:id" element={<StageRoute />} />
             <Route path="/certificate" element={<Certificate />} />
             <Route path="/dictionary" element={<DictionaryHome />} />
             <Route path="/dictionary/:category" element={<CategoryDashboard />} />

@@ -54,6 +54,8 @@ export const Shop: React.FC = () => {
   const { shop, balance, buy, equipTitle, equipTheme, equipFrame, setBackgroundImage, setBackgroundOn } = useShop();
   const { salePercent, saleLabel } = useAppSettings();
   const [tab, setTab] = useState<Tab>('title');
+  // 「持っているものだけ」表示（子どもの声 2026-10-17「自分がもう持ってるものの枠が欲しい。いちいち探すの大変」）
+  const [onlyOwned, setOnlyOwned] = useState(false);
   // 着せ替えの「おためし」。このページにいる間だけ見た目を変える（買わなくても試せる）。
   const [previewTheme, setPreviewTheme] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);   // 称号のおためし（子どもの声 2026-09-15）
@@ -191,22 +193,31 @@ export const Shop: React.FC = () => {
           </button>
         ))}
       </div>
+      {tab !== 'bg' && (
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: 'bold', color: 'var(--color-primary)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={onlyOwned} onChange={e => setOnlyOwned(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />
+          持っているものだけ 見る
+        </label>
+      )}
 
       {tab === 'title' && (
         <div className="flex-col gap-md">
-          <p style={{ textAlign: 'center', color: '#666', margin: 0, fontSize: '0.9rem' }}>つけると、名前の横に 表示されるよ！</p>
+          <p style={{ textAlign: 'center', color: '#666', margin: 0, fontSize: '0.9rem' }}>つけると、名前の上に 表示されるよ！</p>
           {/* おためし中の見え方（ホームの見出しと同じ形） */}
           <div style={{ textAlign: 'center', padding: '0.6rem', borderRadius: '12px', background: 'rgba(253, 203, 110, 0.18)', fontWeight: 'bold' }}>
-            こんにちは、{localStorage.getItem('studentName') || 'ゲスト'}
-            {findTitle(previewTitle || shop.equippedTitle)?.emoji || ''}さん！
+            {findTitle(previewTitle || shop.equippedTitle) && (
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{findTitle(previewTitle || shop.equippedTitle)!.emoji} {findTitle(previewTitle || shop.equippedTitle)!.name}</div>
+            )}
+            こんにちは、{localStorage.getItem('studentName') || 'ゲスト'}さん！
             <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
               {previewTitle ? `${findTitle(previewTitle)?.name} を おためし中` : 'いまの 見え方'}
             </div>
           </div>
           {/* 今月限定：その月だけ買える。買ったものは月が変わっても持ったまま */}
+          {(!onlyOwned || seasonalThisMonth().some(t => owned(t.id))) && (
           <div style={{ border: '2px dashed var(--color-accent)', borderRadius: '14px', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div style={{ fontWeight: 'bold', textAlign: 'center' }}>🗓️ {currentMonth()}月だけの 限定称号</div>
-            {seasonalThisMonth().map(t => (
+            {seasonalThisMonth().filter(t => !onlyOwned || owned(t.id)).map(t => (
               <ItemCard key={t.id} item={t} equipped={shop.equippedTitle === t.id}
                 previewing={previewTitle === t.id}
                 onPreview={() => setPreviewTitle(prev => prev === t.id ? null : t.id)}
@@ -214,13 +225,14 @@ export const Shop: React.FC = () => {
             ))}
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>来月は ちがう称号が 出るよ。手に入れたものは ずっと使えるよ</div>
           </div>
+          )}
           {SEASONAL_TITLES.filter(t => t.month !== currentMonth() && owned(t.id)).map(t => (
             <ItemCard key={t.id} item={{ ...t, desc: `${t.month}月の限定称号（持っているよ）` }} equipped={shop.equippedTitle === t.id}
               previewing={previewTitle === t.id}
               onPreview={() => setPreviewTitle(prev => prev === t.id ? null : t.id)}
               onEquip={() => { setPreviewTitle(null); equipTitle(t.id); }} onUnequip={() => equipTitle(null)} />
           ))}
-          {TITLES.map(t => (
+          {TITLES.filter(t => !onlyOwned || owned(t.id)).map(t => (
             <ItemCard key={t.id} item={t} equipped={shop.equippedTitle === t.id}
               previewing={previewTitle === t.id}
               onPreview={() => setPreviewTitle(prev => prev === t.id ? null : t.id)}
@@ -240,10 +252,10 @@ export const Shop: React.FC = () => {
             </div>
           )}
           {/* 今月だけの着せ替え（買ったものは月が変わっても使える） */}
-          {seasonalThemesThisMonth().length > 0 && (
+          {seasonalThemesThisMonth().filter(t => !onlyOwned || owned(t.id)).length > 0 && (
             <div style={{ border: '2px dashed var(--color-accent)', borderRadius: '14px', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <div style={{ fontWeight: 'bold', textAlign: 'center' }}>🗓️ {currentMonth()}月だけの 限定着せ替え</div>
-              {seasonalThemesThisMonth().map(t => (
+              {seasonalThemesThisMonth().filter(t => !onlyOwned || owned(t.id)).map(t => (
                 <ItemCard key={t.id} item={t} equipped={shop.equippedTheme === t.id}
                   previewing={previewTheme === t.id}
                   onPreview={() => setPreviewTheme(prev => prev === t.id ? null : t.id)}
@@ -258,7 +270,7 @@ export const Shop: React.FC = () => {
               onPreview={() => setPreviewTheme(prev => prev === t.id ? null : t.id)}
               onEquip={() => { setPreviewTheme(null); equipTheme(t.id); }} onUnequip={() => equipTheme(null)} />
           ))}
-          {THEMES.map(t => (
+          {THEMES.filter(t => !onlyOwned || owned(t.id)).map(t => (
             <ItemCard key={t.id} item={t} equipped={shop.equippedTheme === t.id}
               previewing={previewTheme === t.id}
               onPreview={() => setPreviewTheme(prev => prev === t.id ? null : t.id)}
@@ -287,7 +299,7 @@ export const Shop: React.FC = () => {
               {previewFrame ? `${findFrame(previewFrame)?.name} を おためし中` : 'いまの 見え方'}
             </div>
           </div>
-          {FRAMES.map(f => (
+          {FRAMES.filter(f => !onlyOwned || owned(f.id)).map(f => (
             <ItemCard key={f.id} item={f} equipped={shop.equippedFrame === f.id}
               previewing={previewFrame === f.id}
               onPreview={() => setPreviewFrame(prev => prev === f.id ? null : f.id)}

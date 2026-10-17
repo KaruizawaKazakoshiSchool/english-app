@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVocabulary } from '../../hooks/useVocabulary';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
@@ -55,6 +55,19 @@ export const SkillTest: React.FC = () => {
   const [earned, setEarned] = useState<number | null>(null);
 
   const q = questions[qIndex];
+
+  // 音の問題は、出たときに自動で1回流す（子どもの声 2026-10-17「音を聞くを押さないと音が流れない」）
+  useEffect(() => {
+    if (q && q.type === 'audio' && !finished) {
+      const t = setTimeout(() => speak(q.word.english), 400);
+      return () => clearTimeout(t);
+    }
+  }, [qIndex, questions, finished]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 問題がまだ作れていなかったら作り直す（開いても何も出ないことがあった）
+  useEffect(() => {
+    if (questions.length === 0 && pool.length > 0) setQuestions(makeQuestions());
+  }, [pool]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePick = (choice: Vocabulary) => {
     if (picked || finished) return;
@@ -119,7 +132,7 @@ export const SkillTest: React.FC = () => {
     );
   }
 
-  if (!q) return null;
+  if (!q) return <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>読み込み中…</div>;
 
   return (
     <div className="flex-col gap-lg" style={{ flex: 1, maxWidth: '640px', margin: '0 auto', width: '100%', padding: '1rem' }}>
@@ -143,7 +156,8 @@ export const SkillTest: React.FC = () => {
         ) : (
           <>
             <p style={{ margin: 0, fontSize: '1.1rem', color: '#666' }}>この意味の英語を選ぼう</p>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{q.word.emoji} {q.word.japanese}</div>
+            {/* 数の単元は絵文字と意味がどちらも「50」なので、同じなら1回だけ出す（子どもの声 2026-10-17「50 50って二つ」） */}
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{q.word.emoji === q.word.japanese ? q.word.japanese : `${q.word.emoji} ${q.word.japanese}`}</div>
           </>
         )}
       </div>

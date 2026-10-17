@@ -23,6 +23,9 @@ export const Layout: React.FC = () => {
   // 「さっき何をやったか」をここ1か所で記録する（ふりかえり画面で思い出す材料にする）。
   // 画面ごとにコードを足さなくて済むよう、URLから活動名を作っている。
   const location = useLocation();
+  // 画面が変わったら一番上から見せる（子どもの声 2026-10-17「Picture Dictionary を選ぶと中間くらいで開く」）。
+  // 前の画面のスクロール位置が残り、上にある「単語実力テスト」なども見えなくなっていた
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname, location.search]);
   useEffect(() => {
     if (!studentId) return;
     const dict: Record<string, string> = {};

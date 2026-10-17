@@ -495,6 +495,7 @@ export const Home: React.FC = () => {
           >
             修了証を見る！
           </Button>
+          <div style={{ fontSize: '0.9rem', color: '#475569' }}>フォニックスを全部クリアした証明書だよ。スタッフにサインをもらおう</div>
         </div>
       )}
     </div>

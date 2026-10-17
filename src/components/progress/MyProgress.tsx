@@ -6,6 +6,8 @@ import { Button } from '../ui/Button';
 import { useVocabulary } from '../../hooks/useVocabulary';
 import { stages } from '../../data/stages';
 import { DEFAULT_QUIZZES } from '../textbook/textbookQuizData';
+import { DIALOGUES } from '../dialogue/dialogueData';
+import { isArchived } from '../../data/archivedUnits';
 import { useDictionaryProgress, type DictCategoryProgress } from '../../hooks/useDictionaryProgress';
 import { usePronunciationHistory, type ScoreMode } from '../../hooks/usePronunciationHistory';
 
@@ -98,6 +100,13 @@ export const MyProgress: React.FC = () => {
   const textbookDone = DEFAULT_QUIZZES.filter(q => (clearCounts[`textbook_quiz_${q.id}`] || 0) > 0).length;
   const textbookPct = DEFAULT_QUIZZES.length > 0 ? Math.round((textbookDone / DEFAULT_QUIZZES.length) * 100) : 0;
 
+  // ダイアログ・お話づくり・AI英会話の記録（子どもの声 2026-10-17「ダイアログとかお話作りの記録もほしい」）
+  const dialogueList = DIALOGUES.filter(d => !isArchived(d.id));
+  const dialogueDone = dialogueList.filter(d => (clearCounts[`dialogue_${d.id}`] || 0) > 0).length;
+  const dialoguePct = dialogueList.length > 0 ? Math.round((dialogueDone / dialogueList.length) * 100) : 0;
+  const storyCount = (clearCounts['story_mode'] || 0) + (clearCounts['story_mode_reading'] || 0);
+  const aiClearCount = Object.entries(clearCounts).filter(([k]) => k.startsWith('ai_clear_')).reduce((n, [, v]) => n + (v || 0), 0);
+
   // ===== 発音スコアの推移 =====
   const recent = history.slice(-30);
   const bestScore = history.length ? Math.max(...history.map(h => h.score)) : 0;
@@ -144,6 +153,13 @@ export const MyProgress: React.FC = () => {
         <Ring pct={phonicsPct} color="#ff6b6b" emoji="🔤" label="Phonics" sub={`${coreBadgeCount}/${coreStages.length}`} />
         <Ring pct={dictPct} color="#48dbfb" emoji="📚" label="Picture Dictionary" sub={`${masteredCount}/${categories.length} 単元`} />
         <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${DEFAULT_QUIZZES.length} Unit`} />
+        <Ring pct={dialoguePct} color="#0984e3" emoji="🗣️" label="ダイアログ" sub={`${dialogueDone}/${dialogueList.length} 会話`} />
+      </div>
+
+      {/* お話づくり・AI英会話（回数で見せる） */}
+      <div className="glass-card" style={{ padding: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '1.1rem' }}>
+        <span>📚 お話づくり <strong>{storyCount}</strong> 回</span>
+        <span>🤖 AI英会話 クリア <strong>{aiClearCount}</strong> 回</span>
       </div>
 
       {/* ポイント・トロフィー */}

@@ -41,7 +41,11 @@ export const checkReflection = (raw: string): ReflectionCheck => {
   if (ja >= latin) {
     // 日本語の文：つなぎのひらがなが、ある程度ふくまれているか
     const joiners = (squeezed.match(JOINERS) || []).length;
-    if (ja >= 10 && joiners / ja < 0.12) {
+    // カタカナ語（ピクチャーディクショナリー など）は、長くても1語＝1文字ぶんとして数える。
+    // 文字数のまま数えると「つなぎ」の割合が下がり、ちゃんとした文が落ちていた（子どもの声 2026-10-15）
+    const kataRuns = squeezed.match(/[ァ-ヺー]{2,}/g) || [];
+    const jaUnits = ja - kataRuns.reduce((n, r) => n + [...r].length - 1, 0);
+    if (jaUnits >= 10 && joiners / jaUnits < 0.12) {
       return { ok: false, length, hint: '文になっていないみたい。「〜が できた」「〜が むずかしかった」のように 書いてみよう' };
     }
     // ローマ字のでたらめが大きくまざっている

@@ -101,6 +101,7 @@ export const Stage: React.FC = () => {
   const navigate = useNavigate();
   const goBack = useSafeBack('/home?tab=phonics'); // 1つ上＝フォニックスのステージ一覧へ
   const stage = stages.find(s => s.id === parseInt(id || '1'));
+  const nextStage = stage ? stages[stages.findIndex(s => s.id === stage.id) + 1] : undefined;
   
   const speak = useCallback((text: string) => {
     const ltext = text.toLowerCase();
@@ -516,9 +517,14 @@ export const Stage: React.FC = () => {
         )}
         <p style={{ fontSize: '1.5rem' }}>{TOTAL_QUESTIONS}問中 <strong>{correctCount}</strong>問 正解！</p>
         <p style={{ fontSize: '1.5rem' }}><strong>{stage.badgeName}</strong> バッジをゲットしたよ！</p>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        {/* 次のステージ・ステージ一覧へも行けるように（子どもの声 2026-10-17「もう一度プレイとホームに戻るしかない」） */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {nextStage && (
+            <Button onClick={() => navigate(`/stage/${nextStage.id}`)}>次のステージへ ▶</Button>
+          )}
           <Button onClick={resetSession} variant="outline">もう一度プレイ</Button>
-          <Button onClick={() => navigate('/home')}>ホームにもどる</Button>
+          <Button onClick={() => navigate('/home?tab=phonics')} variant="outline">ステージ一覧</Button>
+          <Button onClick={() => navigate('/home')} variant="outline">ホームにもどる</Button>
         </div>
       </div>
     );
@@ -532,6 +538,7 @@ export const Stage: React.FC = () => {
         <p style={{ fontSize: '1.2rem', color: '#666' }}>{PASS_MARK}問正解でクリアだよ。もう一度挑戦しよう！</p>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
           <Button onClick={resetSession} icon={RefreshCw}>もう一度</Button>
+          <Button onClick={() => navigate('/home?tab=phonics')} variant="outline">ステージ一覧</Button>
           <Button onClick={() => navigate('/home')} variant="outline">ホームにもどる</Button>
         </div>
       </div>
