@@ -26,6 +26,9 @@ Supabaseをデータベースとして使用。GitHub Pagesにデプロイ済み
 ## いまの仕組み（2026-09-24 時点）
 
 - **フロントエンド**: React 19 + TypeScript + Vite。公開は GitHub Pages（`npm run deploy`）
+  - **2026-10-19〜 学園のGitHub組織 `KaruizawaKazakoshiSchool/english-app` へ移行中**。新URL https://karuizawakazakoshischool.github.io/english-app/
+  - 切りかえまでは `npm run deploy` が旧（thunder-19900512）と新（学園）の両方に公開する。push も `git push origin main && git push school main` の両方へ
+  - 新リポジトリには main だけを送った（名簿を外した後の履歴）。旧 gh-pages ブランチ（6月〜・名簿入りの時期を含む）は送らない
 - **DB**: Supabase（プロジェクト「English Learning Adventure」）。ログインは「あいことば」1つのクラス共用アカウント
 - **AI・音声のキーはブラウザに置かない**。Supabase の Edge Function（`supabase/functions/`）が中継する
   - `gemini` … AI英会話・お話づくり（アプリ側は `src/lib/aiProxy.ts` から呼ぶ）
