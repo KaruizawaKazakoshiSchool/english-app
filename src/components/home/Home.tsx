@@ -22,6 +22,7 @@ const missionVideo = (m: { route: string; videoUrl?: string }): string | undefin
   return DEFAULT_QUIZZES.find(q => q.id === id)?.url || undefined;
 };
 import { UnitHub } from './UnitHub';
+import { SpeakableText } from '../ui/SpeakableText';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -167,7 +168,7 @@ export const Home: React.FC = () => {
                     ⭐ ポイント {MISSION_MULTIPLIER}倍
                   </span>
                 </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{mission.label}</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}><SpeakableText text={mission.label} /></div>
                 {gateNote(mission) && <div style={{ fontSize: '0.95rem', fontWeight: 'bold', opacity: 0.95 }}>{gateNote(mission)}</div>}
               </div>
               <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>

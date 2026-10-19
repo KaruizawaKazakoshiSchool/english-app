@@ -17,6 +17,7 @@ import { EIKEN_LEVELS, findEiken, loadEiken, saveEiken } from '../../../data/eik
 import { isArchived } from '../../../data/archivedUnits';
 import { useSafeBack } from '../../../hooks/useSafeBack';
 import { markUnitClear } from '../../../lib/unitProgress';
+import { SpeakableText } from '../../ui/SpeakableText';
 
 // 教科書の各Unitに紐づくフリートークの場面とゴール。
 // goal は英語（AIがこの条件を満たしたら最後に [CLEAR] を付ける＝クリア判定の基準）。
@@ -738,7 +739,7 @@ export const AIAssistant: React.FC = () => {
 
       {/* ゴール表示 */}
       <div style={{ background: 'rgba(253, 203, 110, 0.25)', border: '1px solid var(--color-accent)', borderRadius: '12px', padding: '0.5rem 1rem', marginBottom: '0.5rem', fontWeight: 'bold', color: '#7a5a00', textAlign: 'center', fontSize: '0.95rem' }}>
-        {scenario.goalLabel}
+        <SpeakableText text={scenario.goalLabel} />
       </div>
 
       {/* チームの順番ボード */}
@@ -823,9 +824,9 @@ export const AIAssistant: React.FC = () => {
           <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>💡 こんなふうに言ってみよう！（タップで入力）</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {scenario.suggestions.map((s, i) => (
-              <button key={i} onClick={() => { setInputText(s.en); setShowHelp(false); }}
+              <button key={i} onClick={() => { setInputText(s.en); setShowHelp(false); speak(s.en); }}
                 style={{ textAlign: 'left', padding: '0.6rem 0.9rem', borderRadius: '10px', border: '1px solid #cde', background: 'white', cursor: 'pointer' }}>
-                <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}>{s.en}</span>
+                <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}>🔈 {s.en}</span>
                 <span style={{ color: '#888', fontSize: '0.85rem', marginLeft: '0.5rem' }}>{s.ja}</span>
               </button>
             ))}

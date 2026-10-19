@@ -5,6 +5,7 @@ import { itemProgress, type ItemKind } from '../../lib/unitProgress';
 import type { DictCategoryProgress } from '../../hooks/useDictionaryProgress';
 import type { TodayMission } from '../../hooks/useAppSettings';
 import { isOnMission, MISSION_MULTIPLIER } from '../../lib/missionBonus';
+import { SpeakableText } from '../ui/SpeakableText';
 
 // トップの「今の単元」パネル。
 // 単元で使うモードを全部並べて、それぞれの達成率を見せる（子どもが「次はこれ」と選べるように）。
@@ -84,7 +85,7 @@ export const UnitHub: React.FC<{
                 )}
               </div>
               <div style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#000' }}>{it.label}</div>
-              {it.note && <div style={{ fontSize: '0.9rem', color: '#666' }}>{it.note}</div>}
+              {it.note && <div style={{ fontSize: '0.9rem', color: '#666' }}><SpeakableText text={it.note} /></div>}
               {p.total > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{ flex: 1, height: '8px', background: '#eee', borderRadius: '999px', overflow: 'hidden' }}>

@@ -10,6 +10,7 @@ import { usePoints } from '../../hooks/usePoints';
 import { showToast } from '../ui/Toast';
 import { DIALOGUES, type Dialogue, type DialogueLine } from './dialogueData';
 import { isArchived } from '../../data/archivedUnits';
+import { SpeakableText } from '../ui/SpeakableText';
 
 // 発音採点に通すため {…} のスロット記号を外した素の文を作る
 const cleanText = (en: string) => en.replace(/[{}]/g, '');
@@ -182,7 +183,7 @@ export const DialogueTrainer: React.FC = () => {
       {dialogue.note && (
         <div className="glass-card" style={{ padding: '0.8rem 1rem', background: 'rgba(253, 203, 110, 0.18)', border: '2px solid #fdcb6e', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '1.3rem' }}>💡</span>
-          <span style={{ fontSize: '0.95rem', color: '#7a5a00' }}>{dialogue.note}</span>
+          <SpeakableText text={dialogue.note} style={{ fontSize: '0.95rem', color: '#7a5a00' }} />
         </div>
       )}
 
