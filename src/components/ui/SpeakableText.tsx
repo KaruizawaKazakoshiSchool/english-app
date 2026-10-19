@@ -18,7 +18,7 @@ export const SpeakableText: React.FC<{ text: string; style?: React.CSSProperties
     const i = m.index ?? 0;
     if (i > last) parts.push(text.slice(last, i));
     parts.push(
-      <button key={i} type="button" onClick={e => { e.stopPropagation(); speak(toSpeech(chunk)); }}
+      <button key={i} type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); speak(toSpeech(chunk)); }}
         title="タップで読み上げ"
         style={{ display: 'inline', font: 'inherit', color: 'inherit', background: 'rgba(255,255,255,0.35)', border: 'none', borderBottom: '2px dotted currentColor', borderRadius: '4px', padding: '0 0.15em', margin: '0 0.1em', cursor: 'pointer' }}>
         🔈{chunk}

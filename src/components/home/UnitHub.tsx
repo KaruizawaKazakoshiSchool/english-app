@@ -6,6 +6,7 @@ import type { DictCategoryProgress } from '../../hooks/useDictionaryProgress';
 import type { TodayMission } from '../../hooks/useAppSettings';
 import { isOnMission, MISSION_MULTIPLIER } from '../../lib/missionBonus';
 import { SpeakableText } from '../ui/SpeakableText';
+import { markFromHub, HUB_ANCHOR } from '../../lib/hubReturn';
 
 // トップの「今の単元」パネル。
 // 単元で使うモードを全部並べて、それぞれの達成率を見せる（子どもが「次はこれ」と選べるように）。
@@ -41,7 +42,7 @@ export const UnitHub: React.FC<{
   const pct = sumTotal ? Math.round((sumDone / sumTotal) * 100) : 0;
 
   return (
-    <div className="glass-card animate-pop" style={{ width: '100%', maxWidth: '900px', padding: '1.2rem 1.4rem', border: '3px solid var(--color-primary)', boxSizing: 'border-box' }}>
+    <div id={HUB_ANCHOR} className="glass-card animate-pop" style={{ width: '100%', maxWidth: '900px', padding: '1.2rem 1.4rem', border: '3px solid var(--color-primary)', boxSizing: 'border-box', scrollMarginTop: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
         <div style={{ flex: 1, minWidth: '200px' }}>
           <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#666' }}>📚 今の単元</div>
@@ -69,7 +70,7 @@ export const UnitHub: React.FC<{
             <div
               key={it.route + i}
               className="hover-scale"
-              onClick={() => navigate(it.route)}
+              onClick={() => { markFromHub(it.route); navigate(it.route); }}
               style={{
                 cursor: 'pointer', padding: '0.8rem 1rem', borderRadius: '14px', background: done ? 'rgba(0, 184, 148, 0.12)' : 'white',
                 border: mission ? '3px solid #ee5253' : `2px solid ${k.color}`, display: 'flex', flexDirection: 'column', gap: '0.35rem',
@@ -85,7 +86,7 @@ export const UnitHub: React.FC<{
                 )}
               </div>
               <div style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#000' }}>{it.label}</div>
-              {it.note && <div style={{ fontSize: '0.9rem', color: '#666' }}><SpeakableText text={it.note} /></div>}
+              {it.note && <div onClick={e => e.stopPropagation()} style={{ fontSize: '0.9rem', color: '#666', cursor: 'default' }}><SpeakableText text={it.note} /></div>}
               {p.total > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{ flex: 1, height: '8px', background: '#eee', borderRadius: '999px', overflow: 'hidden' }}>

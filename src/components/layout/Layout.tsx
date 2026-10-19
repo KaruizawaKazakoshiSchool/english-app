@@ -25,7 +25,20 @@ export const Layout: React.FC = () => {
   const location = useLocation();
   // 画面が変わったら一番上から見せる（子どもの声 2026-10-17「Picture Dictionary を選ぶと中間くらいで開く」）。
   // 前の画面のスクロール位置が残り、上にある「単語実力テスト」なども見えなくなっていた
-  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname, location.search]);
+  useEffect(() => {
+    // 「今の単元」から入った画面の「もどる」は、トップの今の単元の位置へ（lib/hubReturn）
+    const anchor = (location.state as { scrollTo?: string } | null)?.scrollTo;
+    if (anchor) {
+      // 今の単元は設定を読み込んでから出るので、出てくるまで少し待つ（最大2秒）
+      let tries = 0;
+      const t = setInterval(() => {
+        const el = document.getElementById(anchor);
+        if (el || ++tries > 20) { clearInterval(t); el?.scrollIntoView({ block: 'start' }); }
+      }, 100);
+      return () => clearInterval(t);
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.search, location.state]);
   useEffect(() => {
     if (!studentId) return;
     const dict: Record<string, string> = {};

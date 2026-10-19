@@ -14,6 +14,7 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-10-20', text: '↩️ 「今の単元」から入った練習で「もどる」を押すと、今の単元の一覧に もどるようになったよ。説明の英語をタップしても 飛ばずに 読み上げるよ', fromVoice: true },
   { date: '2026-10-20', text: '🔈 ミッションや説明の中の英語を タップすると、読み上げてくれるようになったよ（AI英会話のヘルプも）', fromVoice: true },
   { date: '2026-10-17', text: '🧪 単語実力テスト：音の問題は 自動で音が出るように／「50 50」のように2回出ていたのを直したよ／開いても何も出ないことがあったのを直したよ', fromVoice: true },
   { date: '2026-10-17', text: '📜 画面を開くと、いつも一番上から 見えるようにしたよ（Picture Dictionary が 中間から開いていた）', fromVoice: true },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { useAppSettings } from '../../../hooks/useAppSettings';
 import { saveConversationLog } from '../../../lib/conversationLogs';
 import { STUDENTS } from '../../../data/students';
@@ -18,6 +18,7 @@ import { isArchived } from '../../../data/archivedUnits';
 import { useSafeBack } from '../../../hooks/useSafeBack';
 import { markUnitClear } from '../../../lib/unitProgress';
 import { SpeakableText } from '../../ui/SpeakableText';
+import { isHubEntry } from '../../../lib/hubReturn';
 
 // 教科書の各Unitに紐づくフリートークの場面とゴール。
 // goal は英語（AIがこの条件を満たしたら最後に [CLEAR] を付ける＝クリア判定の基準）。
@@ -229,6 +230,7 @@ const parseReply = (raw: string): { en: string; ja: string; cleared: boolean; bo
 
 export const AIAssistant: React.FC = () => {
   const goBack = useSafeBack();
+  const routerLoc = useLocation();
   const { freetalkGoals } = useAppSettings();
   const studentName = localStorage.getItem('studentName') || 'ゲスト';
   const { speak } = useSpeechSynthesis();
@@ -713,7 +715,7 @@ export const AIAssistant: React.FC = () => {
   return (
     <div className="flex-col" style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <Button variant="outline" onClick={() => { setMode(null); setMessages([]); setPendingFreetalk(true); }} icon={ArrowLeft}>もどる</Button>
+        <Button variant="outline" onClick={() => { if (isHubEntry(routerLoc.pathname, routerLoc.search)) { goBack(); return; } setMode(null); setMessages([]); setPendingFreetalk(true); }} icon={ArrowLeft}>もどる</Button>
         <h2 className="text-primary" style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '1.3rem' }}>{scenario.emoji} {scenario.title}</h2>
         <Button variant="outline" onClick={() => setShowTranslation(t => !t)} style={{ fontSize: '0.85rem', padding: '0.4rem 0.7rem' }} icon={Languages}>
           {showTranslation ? '訳オフ' : '訳オン'}
