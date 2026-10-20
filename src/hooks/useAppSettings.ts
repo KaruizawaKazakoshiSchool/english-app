@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { setCap, getCap } from '../lib/apiUsage';
 import { saveMissionCache } from '../lib/missionBonus';
 import type { CurrentUnit } from '../lib/unitProgress';
+import { lockEndsAt } from '../lib/lockExpiry';
 
 export interface TodayMission {
   label: string;
@@ -18,7 +19,10 @@ export const useAppSettings = () => {
   // 旧設定の isScreenLocked（真偽）も読める。lockMode があればそちらを優先
   // 先生が「発音チェックをオフ」にしたら、全端末でかんたんな聞き取り（Web Speech）に切り替える
   const [azureDisabled, setAzureDisabled] = useState<boolean>(false);
-  const [lockMode, setLockMode] = useState<'none' | 'screen' | 'reflection' | 'missions'>('none');
+  const [rawLockMode, setLockMode] = useState<'none' | 'screen' | 'reflection' | 'missions'>('none');
+  // ロックをかけた時刻。45分たったら端末側で外す（lib/lockExpiry）
+  const [lockSetAt, setLockSetAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   // 今日のミッション（複数対応）。旧データの todayMission（単数）も読めるようにする。
   const [todayMissions, setTodayMissions] = useState<TodayMission[]>([]);
   const [geminiDailyCap, setGeminiDailyCap] = useState<number>(getCap('gemini'));
@@ -43,6 +47,8 @@ export const useAppSettings = () => {
     const applySettings = (progress: any) => {
       if (!progress) return;
       setAzureDisabled(progress.azureDisabled === true);
+      setLockSetAt(typeof progress.lockSetAt === 'number' ? progress.lockSetAt : null);
+      setNow(Date.now());
       if (progress.lockMode !== undefined) setLockMode(progress.lockMode || 'none');
       else if (progress.isScreenLocked !== undefined) setLockMode(progress.isScreenLocked ? 'screen' : 'none');
       // 複数ミッション（新形式）を優先。無ければ旧形式（単数）を配列に包んで互換維持
@@ -91,6 +97,17 @@ export const useAppSettings = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // 外れる時刻が来たら、もう一度計算しなおす（画面を開いたままでも45分で外れる）
+  const endsAt = rawLockMode !== 'none' ? lockEndsAt(lockSetAt) : null;
+  useEffect(() => {
+    if (!endsAt) return;
+    const wait = endsAt - Date.now();
+    if (wait <= 0) return;
+    const t = setTimeout(() => setNow(Date.now()), Math.min(wait + 500, 2 ** 31 - 1));
+    return () => clearTimeout(t);
+  }, [endsAt]);
+  const lockMode = endsAt && now >= endsAt ? 'none' : rawLockMode;
 
   return { azureDisabled, lockMode, todayMissions, geminiDailyCap, azureDailyCap, customVocabEnabled, freetalkGoals, treeMode, spendMode, salePercent, saleLabel, currentUnit };
 };

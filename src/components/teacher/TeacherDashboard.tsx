@@ -7,6 +7,7 @@ import { Button } from '../ui/Button';
 import { ArrowLeft, Key, Save, Target, Gauge } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { setCap, getUsage, DEFAULT_CAP } from '../../lib/apiUsage';
+import { lockEndsAt, LOCK_AUTO_OFF_MIN } from '../../lib/lockExpiry';
 import { checkStaffPin, fetchAzureSpeechToken, generateWithGemini } from '../../lib/aiProxy';
 import { DIALOGUES } from '../dialogue/dialogueData';
 import { DEFAULT_QUIZZES } from '../textbook/textbookQuizData';
@@ -287,6 +288,8 @@ export const TeacherDashboard: React.FC = () => {
   // クラスの木のグループ分け（56A対56B / 5年対6年）
   const [treeMode, setTreeMode] = useState<'cls' | 'grade'>('cls');
   const [spendMode, setSpendMode] = useState<'locked' | 'setup' | 'open'>('locked');
+  const [lockSetAt, setLockSetAt] = useState<number | null>(null);   // ロックをかけた時刻（45分で自動解除）
+  const [lockTick, setLockTick] = useState(Date.now());
   const [salePercent, setSalePercent] = useState(0);
   const [saleLabel, setSaleLabel] = useState('');
   const [saleMsg, setSaleMsg] = useState('');
@@ -331,8 +334,10 @@ export const TeacherDashboard: React.FC = () => {
       if (data.dictionary_progress.feedbackNotifyTo !== undefined) {
         setNotifyTo(data.dictionary_progress.feedbackNotifyTo || '');
       }
+      setLockSetAt(typeof data.dictionary_progress.lockSetAt === 'number' ? data.dictionary_progress.lockSetAt : null);
       if (data.dictionary_progress.lockMode !== undefined) {
-        setLockMode(data.dictionary_progress.lockMode || 'none');
+        const ends = lockEndsAt(data.dictionary_progress.lockSetAt);
+        setLockMode(ends && Date.now() >= ends ? 'none' : (data.dictionary_progress.lockMode || 'none'));
       } else if (data.dictionary_progress.isScreenLocked !== undefined) {
         setLockMode(data.dictionary_progress.isScreenLocked ? 'screen' : 'none');
       }
@@ -381,6 +386,18 @@ export const TeacherDashboard: React.FC = () => {
   };
 
   // Saves the full settings object so individual saves/toggles never wipe other fields.
+  // ロックの残り時間の表示を30秒ごとに更新し、45分たったら画面の表示も「解除中」にする
+  useEffect(() => {
+    if (lockMode === 'none') return;
+    setLockTick(Date.now());
+    const t = setInterval(() => {
+      setLockTick(Date.now());
+      const ends = lockEndsAt(lockSetAt);
+      if (ends && Date.now() >= ends) setLockMode('none');
+    }, 30000);
+    return () => clearInterval(t);
+  }, [lockMode, lockSetAt]);
+
   const persistSettings = async (overrides: Record<string, any> = {}) => {
     if (!supabase) return { error: new Error('no supabase') };
     // ★DBの今の設定に重ねて保存する。以前はこの画面が知っている項目だけで丸ごと上書きしていたので、
@@ -394,8 +411,8 @@ export const TeacherDashboard: React.FC = () => {
         name: 'System Settings',
         dictionary_progress: {
           ...((curRow?.dictionary_progress as Record<string, any>) || {}),
-          lockMode: lockMode,
-          isScreenLocked: lockMode === 'screen', // 旧バージョンのアプリ（キャッシュ）向けの互換
+          // ロックはロックのボタンからだけ書く（ここで画面の状態を書くと、45分で自動解除されたロックが
+          // 別の設定を保存したときに また かかってしまう）
           todayMissions: currentMissions,
           todayMission: currentMissions[0] || null, // 旧バージョンのアプリ（キャッシュ）向けの互換
           geminiDailyCap: geminiCap,
@@ -821,33 +838,39 @@ export const TeacherDashboard: React.FC = () => {
                 {lockMode === 'screen' ? '🔒 画面ロック中（注目モード）' : lockMode === 'reflection' ? '✏️ ふりかえりロック中' : lockMode === 'missions' ? '🎯 ミッションだけ（ほかはロック）' : '🔓 解除中'}
               </span>
             </div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+              ⏰ ロックは かけてから{LOCK_AUTO_OFF_MIN}分で 自動で外れます（外し忘れ対策）。
+              {lockMode !== 'none' && lockEndsAt(lockSetAt) && (
+                <b style={{ color: 'var(--color-error)' }}> あと{Math.max(0, Math.ceil((lockEndsAt(lockSetAt)! - lockTick) / 60000))}分で 外れます。</b>
+              )}
+            </p>
 
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <Button
                 style={{ flex: 1, background: lockMode === 'screen' ? '#ccc' : 'var(--color-error)' }}
                 disabled={lockMode === 'screen'}
-                onClick={async () => { setLockMode('screen'); await persistSettings({ lockMode: 'screen', isScreenLocked: true }); }}
+                onClick={async () => { setLockMode('screen'); const at = Date.now(); setLockSetAt(at); await persistSettings({ lockMode: 'screen', isScreenLocked: true, lockSetAt: at }); }}
               >
                 🔒 画面ロック
               </Button>
               <Button
                 style={{ flex: 1, background: lockMode === 'reflection' ? '#ccc' : '#d97706' }}
                 disabled={lockMode === 'reflection'}
-                onClick={async () => { setLockMode('reflection'); await persistSettings({ lockMode: 'reflection', isScreenLocked: false }); }}
+                onClick={async () => { setLockMode('reflection'); const at = Date.now(); setLockSetAt(at); await persistSettings({ lockMode: 'reflection', isScreenLocked: false, lockSetAt: at }); }}
               >
                 ✏️ ふりかえりロック
               </Button>
               <Button
                 style={{ flex: 1, background: lockMode === 'missions' ? '#ccc' : '#e17055' }}
                 disabled={lockMode === 'missions'}
-                onClick={async () => { setLockMode('missions'); await persistSettings({ lockMode: 'missions', isScreenLocked: false }); }}
+                onClick={async () => { setLockMode('missions'); const at = Date.now(); setLockSetAt(at); await persistSettings({ lockMode: 'missions', isScreenLocked: false, lockSetAt: at }); }}
               >
                 🎯 ミッションだけ
               </Button>
               <Button
                 style={{ flex: 1, background: lockMode === 'none' ? '#ccc' : 'var(--color-success)' }}
                 disabled={lockMode === 'none'}
-                onClick={async () => { setLockMode('none'); await persistSettings({ lockMode: 'none', isScreenLocked: false }); }}
+                onClick={async () => { setLockMode('none'); setLockSetAt(null); await persistSettings({ lockMode: 'none', isScreenLocked: false, lockSetAt: null }); }}
               >
                 🔓 ロックを解除する
               </Button>
