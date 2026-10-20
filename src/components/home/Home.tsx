@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { useVocabulary } from '../../hooks/useVocabulary';
 import { pushToSupabase } from '../../lib/sync';
 import { useDictionaryProgress } from '../../hooks/useDictionaryProgress';
+import { searchUnit, UnitSearchBox } from '../dictionary/UnitSearch';
 import { useAppSettings, type TodayMission } from '../../hooks/useAppSettings';
 import { finishedToday, isMissionOpen } from '../../lib/missionGate';
 import { useShop } from '../../hooks/useShop';
@@ -36,6 +37,7 @@ export const Home: React.FC = () => {
   const setActiveTab = (tab: 'phonics' | 'dictionary' | null) =>
     setSearchParams(tab ? { tab } : {});
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [unitQuery, setUnitQuery] = useState('');   // 単元さがし（2026-10-20）
   const { progress } = useDictionaryProgress();
   const { todayMissions, currentUnit, lockMode } = useAppSettings();
   // 「開くとき」（🏁 さいご／✍️ サインのあと）が効くのは、ミッションだけロックの間だけ
@@ -369,8 +371,14 @@ export const Home: React.FC = () => {
             <Button variant="outline" onClick={() => setActiveTab(null)} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>← もどる</Button>
             <h2 style={{ flex: 1, textAlign: 'center', color: '#444', margin: 0, marginRight: '80px' }}>Picture Dictionary 単元一覧</h2>
           </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <UnitSearchBox value={unitQuery} onChange={setUnitQuery} total={categories.length}
+              count={categories.filter(c => searchUnit(c, unitQuery, vocabulary).match).length} />
+          </div>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
             {categories.map((category, idx) => {
+              const hit = searchUnit(category, unitQuery, vocabulary);
+              if (!hit.match) return null;
               const p = progress[category] || {};
               const cleared = MODE_BADGES.filter(m => (p as any)[m.key]);
               return (
@@ -389,6 +397,9 @@ export const Home: React.FC = () => {
                   <p style={{ margin: '0.5rem 0 0 0', color: '#666', fontSize: '0.9rem' }}>
                     {vocabulary.filter(v => v.category === category).length} words
                   </p>
+                  {hit.words.length > 0 && (
+                    <p style={{ margin: '0.3rem 0 0 0', color: '#b45309', fontSize: '0.85rem', fontWeight: 'bold' }}>{hit.words.slice(0, 3).join('・')}</p>
+                  )}
                   {/* クリアしたモードの印 */}
                   <div style={{ display: 'flex', gap: '0.2rem', marginTop: '0.5rem', minHeight: '1.4rem', fontSize: '1.1rem' }}>
                     {cleared.length === 0

@@ -5,6 +5,7 @@ import { useVocabulary, addCustomWord } from '../../hooks/useVocabulary';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { Button } from '../ui/Button';
 import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
+import { searchUnit, UnitSearchBox } from './UnitSearch';
 
 const inputStyle: React.CSSProperties = { display: 'block', width: '100%', marginTop: '0.3rem', padding: '0.5rem', fontSize: '1rem', borderRadius: '8px', border: '2px solid #e2e8f0', boxSizing: 'border-box' };
 
@@ -22,6 +23,7 @@ export const DictionaryHome: React.FC = () => {
 
   // Get unique categories
   const categories = Array.from(new Set(vocabulary.map(v => v.category)));
+  const [unitQuery, setUnitQuery] = useState('');   // 単元さがし（2026-10-20：単元が増えて探しにくい）
 
   const handleAddWord = async () => {
     if (!form.english.trim() || !form.japanese.trim() || !form.category.trim()) {
@@ -43,6 +45,10 @@ export const DictionaryHome: React.FC = () => {
         <Button variant="outline" onClick={() => navigate('/home')} icon={ArrowLeft}>
           ホームにもどる
         </Button>
+      </div>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
+        <UnitSearchBox value={unitQuery} onChange={setUnitQuery} total={categories.length}
+          count={categories.filter(c => searchUnit(c, unitQuery, vocabulary).match).length} />
       </div>
       
       <div className="flex-col flex-center gap-sm">
@@ -104,7 +110,7 @@ export const DictionaryHome: React.FC = () => {
       )}
 
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', width: '100%', maxWidth: '800px' }}>
-        {categories.map((category, idx) => (
+        {categories.map(category => ({ category, hit: searchUnit(category, unitQuery, vocabulary) })).filter(x => x.hit.match).map(({ category, hit }, idx) => (
           <div 
             key={idx} 
             className="glass-card flex-col flex-center animate-pop"
@@ -117,6 +123,9 @@ export const DictionaryHome: React.FC = () => {
             <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
               {vocabulary.filter(v => v.category === category).length} words
             </p>
+            {hit.words.length > 0 && (
+              <p style={{ margin: '0.3rem 0 0 0', color: '#b45309', fontSize: '0.9rem', fontWeight: 'bold' }}>{hit.words.slice(0, 3).join('・')}</p>
+            )}
           </div>
         ))}
       </div>
