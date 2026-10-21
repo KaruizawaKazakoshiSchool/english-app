@@ -278,6 +278,10 @@ export const PracticeMode: React.FC = () => {
   if (!started) {
     return (
       <div className="flex-col flex-center gap-lg" style={{ minHeight: '60vh', textAlign: 'center' }}>
+        {/* スタート画面にも もどるを（子どもの声 2026-10-17「選択モードに戻るボタンが欲しい」） */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
+          <Button variant="outline" onClick={() => navigate(`/dictionary/${category}`)} icon={ArrowLeft}>もどる</Button>
+        </div>
         <h1 className="text-primary" style={{ margin: 0 }}>{isHard ? '選択モード（ハード）' : '選択モード'}：{decodedCategory}</h1>
         <p style={{ fontSize: '1.1rem', color: '#475569', margin: 0 }}>英語の音を聞いて、合う絵を 選ぼう。音が出るよ 🔊</p>
         <button

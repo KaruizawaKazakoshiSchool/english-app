@@ -14,6 +14,10 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-10-21', text: '🗣️ ダイアログに むずかしさ（やさしい・ふつう・きびしい）が ついたよ。きびしいは 自分のセリフが 日本語だけ！', fromVoice: true },
+  { date: '2026-10-21', text: '👾 モンスターバトルに 🔈お手本を聞くボタンが ついたよ', fromVoice: true },
+  { date: '2026-10-21', text: '🧪 ホームの Picture Dictionary からも 単語実力テストに 行けるよ', fromVoice: true },
+  { date: '2026-10-21', text: '🎯 選択モードのスタート画面に「もどる」が ついたよ／QAモードで 声が反応しないときは 入力で答えられるよ', fromVoice: true },
   { date: '2026-10-20', text: '🔍 Picture Dictionary の一番上に さがす窓が ついたよ。単元の名前でも、単語（dog・いぬ）でも 見つかるよ' },
   { date: '2026-10-20', text: '↩️ 「今の単元」から入った練習で「もどる」を押すと、今の単元の一覧に もどるようになったよ。説明の英語をタップしても 飛ばずに 読み上げるよ', fromVoice: true },
   { date: '2026-10-20', text: '🔈 ミッションや説明の中の英語を タップすると、読み上げてくれるようになったよ（AI英会話のヘルプも）', fromVoice: true },

@@ -16,6 +16,18 @@ import { SpeakableText } from '../ui/SpeakableText';
 const cleanText = (en: string) => en.replace(/[{}]/g, '');
 const PASS = 60;
 
+// むずかしさ（子どもの声 2026-10-19「ダイアログにも やさしい・ふつう・きびしい を」）
+//   やさしい：英語を見ながら。全部読めばクリア（これまでと同じ）
+//   ふつう　：英語を見ながら。自分のセリフが全部 合格ライン（60点）でクリア
+//   きびしい：自分のセリフの英語をかくす（日本語だけ見て言う）。全部 合格ラインでクリア
+// むずかしいほどポイントの倍率が上がる（同じ会話の逓減は共通）。
+type Level = 'easy' | 'normal' | 'hard';
+const LEVELS: { key: Level; label: string; desc: string; multiplier: number }[] = [
+  { key: 'easy', label: 'やさしい', desc: '英語を見ながら。全部読めばクリア', multiplier: 0.5 },
+  { key: 'normal', label: 'ふつう', desc: `英語を見ながら。全部${PASS}点以上でクリア`, multiplier: 0.75 },
+  { key: 'hard', label: 'きびしい', desc: `自分のセリフは日本語だけ。全部${PASS}点以上でクリア`, multiplier: 1 },
+];
+
 // {slot} を色付きで表示する
 const renderEn = (en: string) => {
   const parts = en.split(/(\{.*?\})/g);
@@ -39,7 +51,8 @@ export const DialogueTrainer: React.FC = () => {
   const { addScore } = usePronunciationHistory();
   const { addPoints } = usePoints();
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
-  const awardedRolesRef = useRef<Set<'A' | 'B'>>(new Set());
+  const awardedRolesRef = useRef<Set<string>>(new Set());   // 「役_むずかしさ」ごとに1回
+  const [level, setLevel] = useState<Level>('easy');
 
   const [grade, setGrade] = useState<5 | 6 | null>(null);
   const [dialogue, setDialogue] = useState<Dialogue | null>(null);
@@ -62,16 +75,21 @@ export const DialogueTrainer: React.FC = () => {
 
   // 自分の役のセリフを全部読んだら（点数の良し悪しに関わらず）クリア＝ポイント付与（役ごとに1回）。
   useEffect(() => {
-    if (!dialogue || awardedRolesRef.current.has(myRole)) return;
+    const awardKey = `${myRole}_${level}`;
+    if (!dialogue || awardedRolesRef.current.has(awardKey)) return;
     const myIdx = dialogue.lines.map((l, i) => (l.speaker === myRole ? i : -1)).filter(i => i >= 0);
-    if (myIdx.length > 0 && myIdx.every(i => scores[i] !== undefined)) {
-      awardedRolesRef.current.add(myRole);
+    const ok = (i: number) => scores[i] !== undefined && (level === 'easy' || scores[i] >= PASS);
+    if (myIdx.length > 0 && myIdx.every(ok)) {
+      awardedRolesRef.current.add(awardKey);
       (async () => {
-        const pts = await addPoints(`dialogue_${dialogue.id}`, { multiplier: 0.5 });
+        const pts = await addPoints(`dialogue_${dialogue.id}`, { multiplier: LEVELS.find(l => l.key === level)!.multiplier });
         setEarnedPoints(pts);
       })();
     }
-  }, [scores, myRole, dialogue, addPoints]);
+  }, [scores, myRole, level, dialogue, addPoints]);
+
+  // むずかしさを変えたら、点数をリセットしてやり直す
+  useEffect(() => { setScores({}); setEarnedPoints(null); }, [level]);
 
   // 学年・Unitの選択状態はURL（?grade=5&id=g5-u1）を正にする。
   // こうすると、関連単語練習などへ飛んでから「もどる」で戻ったとき、
@@ -101,7 +119,7 @@ export const DialogueTrainer: React.FC = () => {
       return;
     }
     // 採点は accuracyScore（発音の正確さ）で統一（なめらかさ等で不当に下がるのを防ぐ）
-    setScores(prev => ({ ...prev, [idx]: result.accuracyScore }));
+    setScores(prev => ({ ...prev, [idx]: Math.max(prev[idx] ?? 0, result.accuracyScore) }));   // 言い直したら いちばん良い点を残す
     addScore('dialogue', result.accuracyScore, cleanText(line.en));
   };
 
@@ -151,7 +169,7 @@ export const DialogueTrainer: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
             <Trophy color="var(--color-accent)" />
             <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--color-success)' }}>
-              クリア！「{myRole}」の役を全部読めたね 🎉 +{earnedPoints}ポイント
+              クリア！「{myRole}」の役（{LEVELS.find(l => l.key === level)!.label}）を全部読めたね 🎉 +{earnedPoints}ポイント
             </span>
           </div>
           <div style={{ marginTop: '0.6rem', color: '#555' }}>
@@ -174,6 +192,19 @@ export const DialogueTrainer: React.FC = () => {
         <Button variant="outline" onClick={() => setShowJa(s => !s)} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>
           {showJa ? '訳をかくす' : '訳を見る'}
         </Button>
+      </div>
+
+      <div className="glass-card" style={{ padding: '0.8rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: 'bold', color: '#555' }}>むずかしさ：</span>
+          {LEVELS.map(l => (
+            <button key={l.key} onClick={() => setLevel(l.key)}
+              style={{ padding: '0.4rem 1rem', borderRadius: '999px', border: '2px solid var(--color-primary)', background: level === l.key ? 'var(--color-primary)' : 'white', color: level === l.key ? 'white' : 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer' }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{LEVELS.find(l => l.key === level)!.desc}</div>
       </div>
 
       <p style={{ textAlign: 'center', color: '#888', margin: 0, fontSize: '0.9rem' }}>
@@ -241,14 +272,25 @@ export const DialogueTrainer: React.FC = () => {
               <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: line.speaker === 'A' ? '#e17055' : '#0984e3', marginBottom: '0.3rem' }}>
                 {line.speaker} {isMine && '（あなた）'}
               </div>
-              <div style={{ fontSize: '1.3rem', fontFamily: 'var(--font-heading)' }}>{renderEn(line.en)}</div>
-              {showJa && <div style={{ fontSize: '0.95rem', color: '#666', marginTop: '0.3rem' }}>{line.ja}</div>}
+              {level === 'hard' && isMine && !(score !== undefined && score >= PASS) ? (
+                <>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{line.ja}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.2rem' }}>（英語は かくしているよ。合格すると 見えるよ）</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '1.3rem', fontFamily: 'var(--font-heading)' }}>{renderEn(line.en)}</div>
+                  {showJa && <div style={{ fontSize: '0.95rem', color: '#666', marginTop: '0.3rem' }}>{line.ja}</div>}
+                </>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.6rem' }}>
-                <button onClick={() => handleSpeak(line)} title="聞く"
-                  style={{ background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', fontSize: '1.1rem', flexShrink: 0 }}>
-                  🔈
-                </button>
+                {!(level === 'hard' && isMine && !(score !== undefined && score >= PASS)) && (
+                  <button onClick={() => handleSpeak(line)} title="聞く"
+                    style={{ background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', fontSize: '1.1rem', flexShrink: 0 }}>
+                    🔈
+                  </button>
+                )}
 
                 {isMine && azureAvailable && (
                   <button

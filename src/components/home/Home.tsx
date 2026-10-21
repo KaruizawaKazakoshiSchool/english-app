@@ -371,6 +371,16 @@ export const Home: React.FC = () => {
             <Button variant="outline" onClick={() => setActiveTab(null)} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>← もどる</Button>
             <h2 style={{ flex: 1, textAlign: 'center', color: '#444', margin: 0, marginRight: '80px' }}>Picture Dictionary 単元一覧</h2>
           </div>
+          {/* 単語実力テスト（子どもの声 2026-10-17・18「この画面でも単語テストが出るように」） */}
+          <div className="glass-card hover-scale" onClick={() => navigate('/skilltest')}
+            style={{ marginBottom: '0.8rem', padding: '0.9rem 1.2rem', cursor: 'pointer', border: '2px solid #f59e0b', background: 'rgba(245, 158, 11, 0.12)', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <span style={{ fontSize: '1.6rem' }}>🧪</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#b45309' }}>単語実力テスト</div>
+              <div style={{ fontSize: '0.85rem', color: '#92700a' }}>習った単語からランダム10問・一発勝負！</div>
+            </div>
+            <span style={{ fontSize: '1.3rem', color: '#b45309' }}>›</span>
+          </div>
           <div style={{ marginBottom: '1rem' }}>
             <UnitSearchBox value={unitQuery} onChange={setUnitQuery} total={categories.length}
               count={categories.filter(c => searchUnit(c, unitQuery, vocabulary).match).length} />

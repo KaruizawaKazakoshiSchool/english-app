@@ -375,6 +375,14 @@ export const VoiceBattle: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+        {/* お手本を聞くボタン（子どもの声 2026-10-17「モンスターバトルの最初でも音声が聞けるようにしたい」）。
+            聞いても点は変わらない（発音の合格ラインで決まる） */}
+        {monsterState === 'idle' && targetWord && (
+          <button onClick={() => speak(targetWord.english)} title="お手本を聞く" className="hover-scale"
+            style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--color-accent)', background: 'white', fontSize: '1.8rem', cursor: 'pointer', flexShrink: 0 }}>
+            🔈
+          </button>
+        )}
         <MicButton
           isRecording={azureAvailable ? isAssessing : isRecording}
           disabled={azureAvailable && isAssessing}

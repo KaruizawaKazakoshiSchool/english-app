@@ -441,6 +441,11 @@ export const QAMode: React.FC = () => {
               <Button onClick={handleVoiceSkip} variant="outline" style={{ marginTop: '1rem' }}>
                 パスする
               </Button>
+              {/* 声が反応しないときの逃げ道（子どもの声 2026-10-20「音声が反応しない、助けて」） */}
+              <button onClick={() => { stopListening(); setDifficulty('typing'); }}
+                style={{ marginTop: '0.4rem', background: 'none', border: 'none', color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.95rem' }}>
+                声が反応しないときは ⌨️ 入力で答える
+              </button>
             </>
           )}
         </div>
