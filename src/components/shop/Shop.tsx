@@ -88,6 +88,12 @@ export const Shop: React.FC = () => {
   };
 
   const bgUnlocked = shop.owned.includes(BG_UNLOCK_ID);
+  // タブごとに 持っている数（「持っているものだけ」で何も出ないとき、どのタブにあるか分かるように）
+  const ownedCount = {
+    title: [...TITLES, ...SEASONAL_TITLES].filter(t => owned(t.id)).length,
+    theme: [...THEMES, ...SEASONAL_THEMES].filter(t => owned(t.id)).length,
+    frame: FRAMES.filter(f => owned(f.id)).length,
+  };
 
   const handleUpload = async (file: File) => {
     if (!supabase || !studentId) return;
@@ -189,7 +195,7 @@ export const Shop: React.FC = () => {
           <button key={v} onClick={() => setTab(v)}
             style={{ padding: '0.5rem 1.2rem', borderRadius: '999px', border: '2px solid var(--color-primary)', cursor: 'pointer', fontWeight: 'bold',
               background: tab === v ? 'var(--color-primary)' : 'white', color: tab === v ? 'white' : 'var(--color-primary)' }}>
-            {label}
+            {label}{onlyOwned && v !== 'bg' ? `（${ownedCount[v]}）` : ''}
           </button>
         ))}
       </div>
@@ -198,6 +204,14 @@ export const Shop: React.FC = () => {
           <input type="checkbox" checked={onlyOwned} onChange={e => setOnlyOwned(e.target.checked)} style={{ width: '1.2rem', height: '1.2rem' }} />
           持っているものだけ 見る
         </label>
+      )}
+      {tab !== 'bg' && onlyOwned && ownedCount[tab] === 0 && (
+        <div style={{ textAlign: 'center', padding: '1rem', color: '#64748b', background: 'rgba(255,255,255,0.8)', borderRadius: '12px' }}>
+          この ページで 持っているものは まだないよ。
+          {(['title', 'theme', 'frame'] as const).filter(k => ownedCount[k] > 0).length > 0
+            ? ` ほかのページ（${(['title', 'theme', 'frame'] as const).filter(k => ownedCount[k] > 0).map(k => ({ title: '称号', theme: '着せ替え', frame: '名前のわく' }[k])).join('・')}）を 見てみてね`
+            : ''}
+        </div>
       )}
 
       {tab === 'title' && (
