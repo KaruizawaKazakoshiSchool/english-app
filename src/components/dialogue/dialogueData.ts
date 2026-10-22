@@ -179,6 +179,28 @@ export const DIALOGUES: Dialogue[] = [
     ],
   },
   {
+    // P7 お店の型（2026-10-23 さんだー作）。A＝お客さん、B＝お店の人。両方の役を練習する
+    id: 'p7-shop', grade: 6, unitName: '🛍️ P7 お店の型（Shop）', targetPhrase: "How much is it? — It's 500 yen.",
+    lines: [
+      { speaker: 'A', en: 'Hello! What do you have?', ja: 'こんにちは！何がありますか？' },
+      { speaker: 'B', en: 'We have {caps and T-shirts}.', ja: '【ぼうしとTシャツ】があります。' },
+      { speaker: 'A', en: "I'd like a {blue cap}, please.", ja: '【青いぼうし】をください。' },
+      { speaker: 'B', en: 'Here you are.', ja: 'どうぞ。' },
+      { speaker: 'A', en: 'How much is it?', ja: 'いくらですか？' },
+      { speaker: 'B', en: "It's {five hundred} yen.", ja: '【500】円です。' },
+      { speaker: 'A', en: 'Where is it from?', ja: 'どこで作られたのですか？' },
+      { speaker: 'B', en: "It's from {Vietnam}.", ja: '【ベトナム】で作られました。' },
+      { speaker: 'A', en: 'How much is it in total?', ja: '全部でいくらですか？' },
+      { speaker: 'B', en: "It's {nine hundred} yen in total.", ja: '全部で【900】円です。' },
+      { speaker: 'A', en: 'Here you are. Thank you!', ja: 'はい、どうぞ。ありがとう！' },
+      { speaker: 'B', en: 'Thank you. Bye!', ja: 'ありがとう。さようなら！' },
+    ],
+    note: 'A＝お客さん、B＝お店の人。両方の役を練習しよう！ {…}は自分のお店の商品・値段・国に変えてOK。値段は数字を英語で言おう（500＝five hundred、900＝nine hundred）。言葉は辞書「衣類」「衣類＋」「国＋」「色」「数」。',
+    relatedCategories: ['衣類', '衣類＋（プラスアルファ）', '国＋（プラスアルファ）', '色', '数'],
+    aiRoute: '/ai?unit=p7-shop',
+    aiLabel: 'AIのお客さんに売ってみる',
+  },
+  {
     // P7 World Fashion Show & Shop（2026-10-09）。ショーのセリフ（3人1組で歩き、1人ずつ言う）。A＝観客、B＝モデル（自分）
     id: 'p7-show', grade: 6, unitName: '👗 P7 ファッションショー（ショーのセリフ）', targetPhrase: "This is my blue cap. It's from Vietnam.",
     lines: [
