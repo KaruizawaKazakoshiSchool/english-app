@@ -257,7 +257,7 @@ export const TeacherDashboard: React.FC = () => {
   const [azureDisabled, setAzureDisabled] = useState(false);
   const [aiStatus, setAiStatus] = useState('');
   const [aiIsError, setAiIsError] = useState(false);
-  // ロック：none / screen（注目モード）/ reflection（ふりかえりだけ書ける）
+  // ロック：none / screen（注目モード）/ reflection（ふりかえり＋ショップ・みんなの木）
   const [lockMode, setLockMode] = useState<'none' | 'screen' | 'reflection' | 'missions'>('none');
   const [customVocabEnabled, setCustomVocabEnabled] = useState(false);
   // AI英会話：Unitゴールの上書き（{id:{goal,missionJa,greetingEn,greetingJa}}）と保存メッセージ
@@ -825,7 +825,7 @@ export const TeacherDashboard: React.FC = () => {
           <h2>クラス管理機能</h2>
           <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
             全員の画面を強制的に切り替えます。<b>画面ロック</b>＝何もできない（注目モード）。
-            <b>ふりかえりロック</b>＝「ふりかえりを書く」だけ使える（ほかの画面ではふりかえりへ行くボタンだけ出る）。
+            <b>ふりかえりロック</b>＝「ふりかえりを書く」と、ショップ・みんなの木だけ使える（ほかの画面では、この3つへ行くボタンが出る）。
             <b>ミッションだけ</b>＝今日のミッション（とトップ・ふりかえり）だけ使える。ミッションごとの「開くとき」：
             <b>🏁 さいご</b>＝ほかのミッションを全部クリアすると開き、クリアするとその端末はその日ロックが外れる（スタッフの手はいらない）。
             <b>✍️ サインのあと</b>＝閉じたまま。制作物にサインをしたら、スタッフがその端末で<b>サインの合言葉</b>（このページのPINとは別）を入れる → その端末は30分ロックが外れる。

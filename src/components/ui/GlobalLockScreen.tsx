@@ -12,7 +12,7 @@ export type LockMode = 'none' | 'screen' | 'reflection' | 'missions';
 
 // 全員の画面にかぶせるロック。
 //   screen     … 何もできない（スタッフの話を聞く）
-//   reflection … ふりかえりを書く画面だけ使える。ほかの画面ではこのロックが出て、ボタンで ふりかえりへ
+//   reflection … ふりかえりを書く画面と、ショップ・みんなの木だけ使える（2026-10-23〜）。ほかの画面ではこのロックが出て、ボタンで ふりかえりへ
 //   missions   … 今日のミッションの画面（とトップ・ふりかえり）だけ使える。ミッションごとの「開くとき」は lib/missionGate
 //                （🏁 さいご＝ほかを全部クリアしたら開き、クリアでその日ロックなし／✍️ サインのあと＝合言葉で30分ロックなし）
 export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMission[] }> = ({ mode, missions = [] }) => {
@@ -32,7 +32,9 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMissio
   if (mode === 'none' || localStorage.getItem('studentId') === STAFF_TEST_ID) return null;
 
   const onReflection = location.pathname.startsWith('/reflection');
-  if (mode === 'reflection' && onReflection) return null;
+  // ふりかえりロック中も、ショップとみんなの木には入れる（ためたポイントを使う時間にする）
+  const onShopOrTree = location.pathname.startsWith('/shop') || location.pathname.startsWith('/tree');
+  if (mode === 'reflection' && (onReflection || onShopOrTree)) return null;
 
   // ── ミッションロック
   let blocked: TodayMission | null = null;
@@ -116,7 +118,7 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMissio
           <PenLine size={80} color="var(--color-accent)" className="animate-pop" style={{ marginBottom: '2rem' }} />
           <h1 style={{ color: 'white', fontSize: '3.2rem', margin: 0 }}>✏️ ふりかえりの時間です</h1>
           <p style={{ fontSize: '1.4rem', marginTop: '1rem', color: '#ccc' }}>
-            今は ふりかえりだけ 書けます。ほかの画面は 使えません。
+            今は ふりかえりと、ショップ・みんなの木だけ 使えます。
           </p>
           <button
             onClick={() => navigate('/reflection')}
@@ -125,6 +127,16 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMissio
           >
             ふりかえりを書く →
           </button>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button onClick={() => navigate('/shop')}
+              style={{ padding: '0.7rem 1.8rem', fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '999px', border: '2px solid white', cursor: 'pointer', background: 'transparent', color: 'white' }}>
+              🛍️ ショップ
+            </button>
+            <button onClick={() => navigate('/tree')}
+              style={{ padding: '0.7rem 1.8rem', fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '999px', border: '2px solid white', cursor: 'pointer', background: 'transparent', color: 'white' }}>
+              🌳 みんなの木
+            </button>
+          </div>
         </>
       ) : (
         <>
