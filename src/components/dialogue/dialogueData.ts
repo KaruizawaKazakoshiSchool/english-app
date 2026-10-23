@@ -179,17 +179,17 @@ export const DIALOGUES: Dialogue[] = [
     ],
   },
   {
-    // P7 お店の型（2026-10-23 さんだー作）。A＝お客さん、B＝お店の人。両方の役を練習する
+    // P7 お店の型（2026-10-23 さんだー作・冊子 p.2 と同じ順。冊子の合計の2行は今は読まない）。A＝お客さん、B＝お店の人
     id: 'p7-shop', grade: 6, unitName: '🛍️ P7 お店の型（Shop）', targetPhrase: "How much is it? — It's 500 yen.",
     lines: [
       { speaker: 'A', en: 'Hello! What do you have?', ja: 'こんにちは！何がありますか？' },
       { speaker: 'B', en: 'We have {caps and T-shirts}.', ja: '【ぼうしとTシャツ】があります。' },
       { speaker: 'A', en: "I'd like a {blue cap}, please.", ja: '【青いぼうし】をください。' },
       { speaker: 'B', en: 'Here you are.', ja: 'どうぞ。' },
-      { speaker: 'A', en: 'Where is it from?', ja: 'どこで作られたのですか？' },
-      { speaker: 'B', en: "It's from {Vietnam}.", ja: '【ベトナム】で作られました。' },
       { speaker: 'A', en: 'How much is it?', ja: 'いくらですか？' },
       { speaker: 'B', en: "It's {five hundred} yen.", ja: '【500】円です。' },
+      { speaker: 'A', en: 'Where is it from?', ja: 'どこで作られたのですか？' },
+      { speaker: 'B', en: "It's from {Vietnam}.", ja: '【ベトナム】で作られました。' },
       { speaker: 'A', en: 'Here you are. Thank you!', ja: 'はい、どうぞ。ありがとう！' },
       { speaker: 'B', en: 'Thank you. Bye!', ja: 'ありがとう。さようなら！' },
     ],
