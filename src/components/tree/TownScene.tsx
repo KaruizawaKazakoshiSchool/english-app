@@ -24,6 +24,7 @@ export const TownScene: React.FC<{ built: string[]; total: number; label: string
     <div style={{ width: '100%' }}>
       <div style={{
         position: 'relative', width: '100%', aspectRatio: '16 / 10', borderRadius: '18px', overflow: 'hidden',
+        containerType: 'inline-size',   // 中の絵文字を「町の幅」に合わせた大きさにする（cqw）
         background: 'linear-gradient(#bfe6ff 0%, #e6f6ff 45%, #9fd98b 45%, #7cc46a 100%)',
         border: '3px solid white', boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
       }}>
@@ -55,17 +56,18 @@ export const TownScene: React.FC<{ built: string[]; total: number; label: string
                   style={{
                     position: 'relative', border: picked === p.kind ? '2px solid #f59e0b' : 'none', borderRadius: '10px', cursor: 'pointer',
                     background: top ? 'rgba(255,255,255,0.35)' : 'rgba(120, 90, 50, 0.25)', padding: 0,
-                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'visible',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.6cqw', overflow: 'hidden',
                   }}>
+                  {/* いちばん高いLvの建物を大きく、ほかのLvは下に小さく並べる（重ねない。子どもの声 2026-10-25「アイコンが重なって見える」） */}
                   {top ? (
-                    <span style={{ fontSize: 'clamp(1.6rem, 6vw, 2.8rem)', lineHeight: 1, transform: 'translateY(-10%)' }}>
-                      {top.emoji}
+                    <>
+                      <span style={{ fontSize: '5.2cqw', lineHeight: 1 }}>{top.emoji}</span>
                       {p.items.length > 1 && (
-                        <span style={{ fontSize: '0.45em', position: 'absolute', right: '4%', bottom: '4%' }}>{p.items.slice(1).map(b => b.emoji).join('')}</span>
+                        <span style={{ fontSize: '2.3cqw', lineHeight: 1, letterSpacing: '0.3cqw', whiteSpace: 'nowrap' }}>{p.items.slice(1).map(b => b.emoji).join('')}</span>
                       )}
-                    </span>
+                    </>
                   ) : (
-                    <span style={{ fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', opacity: 0.55, marginBottom: '15%' }}>🚧</span>
+                    <span style={{ fontSize: '2.6cqw', opacity: 0.55 }}>🚧</span>
                   )}
                 </button>
               );
