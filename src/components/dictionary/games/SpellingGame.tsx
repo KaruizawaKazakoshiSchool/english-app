@@ -191,6 +191,15 @@ export const SpellingGame: React.FC = () => {
     }
   };
 
+  const handleSkip = () => {
+    if (showAnswerState || !targetWord) return;
+    setShowAnswerState(true);
+    setTimeout(() => {
+      setShowAnswerState(false);
+      proceedToNextTurn(false);
+    }, 2000);
+  };
+
   const handleTypingSubmit = () => {
     if (showAnswerState || !targetWord) return;
     if (!typingInput.trim()) return;
@@ -491,6 +500,12 @@ export const SpellingGame: React.FC = () => {
               </Button>
             </>
           )}
+
+          {/* パス（子どもの声 2026-10-29「タイピングにスキップを。教科のは難しい」）。
+              答えを見せて次へ。その問題は「まちがい」あつかい＝ポイントは正解した数で決まるので、パスで得はしない */}
+          <Button onClick={handleSkip} variant="outline" style={{ marginTop: '0.5rem' }}>
+            ⏭ パスする（答えを見て 次へ）
+          </Button>
         </div>
       )}
     </div>

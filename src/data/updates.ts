@@ -14,6 +14,7 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-10-30', text: '⌨️ タイピングモードに「⏭ パスする」が ついたよ。答えを見てから 次の問題へ進むよ（パスした問題は まちがい あつかい）', fromVoice: true },
   { date: '2026-10-29', text: '🔈 家などで 音が出ない・はじめが聞こえない ことがあったのを直したよ（端末の中の声を先に使うように）。まだ出ないときは 先生に教えてね', fromVoice: true },
   { date: '2026-10-29', text: '🔥 選択（ハード）は ポイントが ×1.5 になったよ。ふつうより 多くもらえるよ', fromVoice: true },
   { date: '2026-10-29', text: '🔤 フォニックスの「1日3回」が、朝のうちは 前の日のまま 数えられていたのを直したよ', fromVoice: true },
