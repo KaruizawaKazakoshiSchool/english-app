@@ -168,7 +168,9 @@ export const Stage: React.FC = () => {
   // 今日のミッションのあと、すぐフォニックスに流れるのを防ぐため、1日の加点回数に上限を置く。
   // 上限のあとも遊べる（バッジ・記録は残る）が、ポイントは翌日まで入らない。
   const PHONICS_DAILY_CAP = 3;
-  const phonicsKey = () => `phonicsAwards_${localStorage.getItem('studentId')}_${new Date().toISOString().slice(0, 10)}`;
+  // 「今日」はこの端末の日付で数える（以前は世界標準時だったので、朝9時までは前の日の回数が残っていた。子どもの声 2026-10-27 6:54）
+  const localDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const phonicsKey = () => `phonicsAwards_${localStorage.getItem('studentId')}_${localDay()}`;
   const phonicsAwardsToday = () => Number(localStorage.getItem(phonicsKey())) || 0;
   const [capMsg, setCapMsg] = useState('');
 
@@ -383,7 +385,7 @@ export const Stage: React.FC = () => {
           // 今日のぶんは打ち止め。ポイントは出さないが、クリアの記録は必ず残す。
           // （ここで何もしないと addPoints が走らず、サーバへの送信も起きない）
           setEarnedPoints(0);
-          setCapMsg(`今日のフォニックスのポイントは ここまで（1日${PHONICS_DAILY_CAP}回）。ほかの活動も やってみよう！ あしたまた もらえるよ`);
+          setCapMsg(`今日のフォニックスのポイントは ここまで（1日${PHONICS_DAILY_CAP}回）。フォニックスは 1回目のポイントが 大きいので、1日に もらえる回数を 決めているよ。練習は このまま 続けられるし、あしたまた もらえるよ`);
           const sid = localStorage.getItem('studentId');
           if (sid) pushToSupabase(sid);
         } else {

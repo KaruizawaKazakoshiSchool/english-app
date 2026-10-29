@@ -165,7 +165,9 @@ export const PracticeMode: React.FC = () => {
           const pts = await addPoints(`dict_practice${isHard ? '_hard' : ''}_${decodedCategory}`, {
             isPerfect: newFTC === TOTAL_QUESTIONS, // 全問ヒント無しで正解のときだけパーフェクト
             isNewRecord: isNewBest,
-            multiplier: (TOTAL_QUESTIONS / DEFAULT_TOTAL_QUESTIONS) * Math.max(0.2, cleanRatio),
+            // ハード（6択・ヒントなし）は ×1.5。以前は同じ倍率だったので、ハードのあとに ふつうをやると
+            // 深めボーナスがつく ふつうのほうが多くもらえていた（子どもの声 2026-10-27）
+            multiplier: (TOTAL_QUESTIONS / DEFAULT_TOTAL_QUESTIONS) * Math.max(0.2, cleanRatio) * (isHard ? 1.5 : 1),
           });
           setEarnedPoints(pts);
         };

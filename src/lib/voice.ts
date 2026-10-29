@@ -16,6 +16,11 @@ const PREFERRED = [
 const DENY = ['Fred', 'Albert', 'Bad News', 'Bahh', 'Bells', 'Boing', 'Bubbles', 'Cellos', 'Deranged', 'Hysterical', 'Jester', 'Organ', 'Trinoids', 'Whisper', 'Wobble', 'Zarvox', 'Junior', 'Ralph', 'Eddy', 'Reed', 'Rocko', 'Flo', 'Grandpa', 'Grandma', 'Sandy', 'Shelley', 'Superstar'];
 
 let cached: SpeechSynthesisVoice | null = null;
+// ネットの声（Google US English など）が鳴らなかった端末では、以後は端末の中の声だけを使う。
+// 子どもの声 2026-10-27・28「家だと音が出ない」「はじめ聞こえない」：Google の声はインターネット越しに作るので、
+// 家のネットや端末の設定によっては無音・最初が切れる。
+let avoidNetwork = false;
+export const markNetworkVoiceBad = () => { if (!avoidNetwork) { avoidNetwork = true; cached = null; } };
 
 export const getPreferredVoice = (): SpeechSynthesisVoice | null => {
   if (cached) return cached;
@@ -23,17 +28,23 @@ export const getPreferredVoice = (): SpeechSynthesisVoice | null => {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
 
-  for (const name of PREFERRED) {
-    const v = voices.find(x => x.name.includes(name));
-    if (v) { cached = v; return v; }
-  }
   const isEnUS = (v: SpeechSynthesisVoice) => /en[-_]us/i.test(v.lang);
+  const isEn = (v: SpeechSynthesisVoice) => v.lang.toLowerCase().startsWith('en');
   const allowed = (v: SpeechSynthesisVoice) => !DENY.some(d => v.name.includes(d));
-  const enUS = voices.find(v => isEnUS(v) && allowed(v));
-  if (enUS) { cached = enUS; return enUS; }
-  const anyEn = voices.find(v => v.lang.toLowerCase().startsWith('en') && allowed(v));
-  if (anyEn) { cached = anyEn; return anyEn; }
-  cached = voices.find(isEnUS) || null;
+  // まず端末の中の声（localService）から選ぶ。ネットの声は、端末の中に英語の声が無いときだけ
+  const local = voices.filter(v => v.localService);
+  const pools = avoidNetwork ? [local] : [local, voices];
+  for (const pool of pools) {
+    for (const name of PREFERRED) {
+      const v = pool.find(x => x.name.includes(name));
+      if (v) { cached = v; return v; }
+    }
+    const enUS = pool.find(v => isEnUS(v) && allowed(v));
+    if (enUS) { cached = enUS; return enUS; }
+    const anyEn = pool.find(v => isEn(v) && allowed(v));
+    if (anyEn) { cached = anyEn; return anyEn; }
+  }
+  cached = voices.find(v => isEnUS(v) && (!avoidNetwork || v.localService)) || null;
   return cached;
 };
 

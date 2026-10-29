@@ -29,6 +29,7 @@ export const TITLES: ShopItem[] = [
   { id: 't-hamster', emoji: '🐹', name: 'Tiny Hamster', desc: 'tiny＝とても小さい。ちびハムスター', price: 300 },
   { id: 't-owl', emoji: '🦉', name: 'Wise Owl', desc: 'wise＝ものしり。ものしりフクロウ', price: 300 },
   { id: 't-lion', emoji: '🦁', name: 'Brave Lion', desc: 'brave＝ゆうかん。ゆうかんなライオン', price: 300 },
+  { id: 't-bubble', emoji: '🫧', name: 'Soda Bubble', desc: 'bubble＝あわ。ラムネのしゅわしゅわ', price: 100 }, // 子どもの声 2026-10-23「ラムネの🫧を100Pくらいで」
 ];
 
 // 今月限定の称号。その月のあいだだけ買える。買ったら月が変わっても持ったまま・つけられる。
