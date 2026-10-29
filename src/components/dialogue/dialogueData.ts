@@ -216,24 +216,24 @@ export const DIALOGUES: Dialogue[] = [
     aiLabel: 'AIの観客にショーのセリフを言う',
   },
   {
-    // P7 本番の司会（MC）。A＝MC-A、B＝MC-B（P7_司会MCカード の台本と同じ順）
-    id: 'p7-mc', grade: 6, unitName: '🎤 P7 本番の司会（MC）', targetPhrase: 'Welcome to the World Fashion Show & Shop!',
+    // P7 本番の司会（MC）。A＝MC-A、B＝MC-B（P7_司会MCカード の台本と同じ順）。2026-10-30 お店中心の World Fashion Market 版
+    id: 'p7-mc', grade: 6, unitName: '🎤 P7 本番の司会（MC）', targetPhrase: 'Welcome to the World Fashion Market!',
     lines: [
       { speaker: 'A', en: 'Hello, everyone!', ja: 'みなさん、こんにちは！' },
-      { speaker: 'B', en: 'Welcome to the World Fashion Show & Shop!', ja: 'ワールド・ファッションショー＆ショップへようこそ！' },
-      { speaker: 'A', en: 'First, the fashion show. Then, our shops.', ja: 'まずファッションショー。そのあと、お店です。' },
-      { speaker: 'B', en: 'Please enjoy!', ja: '楽しんでください！' },
-      { speaker: 'A', en: 'Here is our first team!', ja: '最初のチームです！' },
-      { speaker: 'B', en: "Next is {Team Blue}! Let's give a big hand!", ja: '次は【チーム・ブルー】！大きな拍手を！（【】にチーム名）' },
-      { speaker: 'B', en: "That's all for the show. Thank you, models!", ja: 'ショーはここまで。モデルのみなさん、ありがとう！' },
-      { speaker: 'A', en: "Now, it's shop time! Let's go shopping!", ja: 'さあ、お店の時間！買いものに行こう！' },
-      { speaker: 'B', en: 'Round 1. The shops are on the right.', ja: 'ラウンド1。お店は右半分です。' },
+      { speaker: 'B', en: 'Welcome to the World Fashion Market!', ja: 'ワールド・ファッション・マーケットへようこそ！' },
+      { speaker: 'A', en: 'You have 2,000 yen and a mission card.', ja: '2,000円とミッションカードがあります。' },
+      { speaker: 'B', en: 'Our shops are open. Please enjoy shopping!', ja: 'お店が開きました。買い物を楽しんでください！' },
+      { speaker: 'A', en: 'Round 1. The shops are on the right.', ja: 'ラウンド1。お店は右半分です。' },
+      { speaker: 'B', en: 'Time sale! 100 yen off!', ja: 'タイムセール！100円引き！' },
       { speaker: 'A', en: 'Change! Round 2. The shops are on the left.', ja: '交代！ラウンド2。お店は左半分です。' },
       { speaker: 'B', en: 'Shop time is over. Thank you!', ja: 'お店の時間はおしまい。ありがとう！' },
-      { speaker: 'A', en: 'Grade 7, 8 and 9, please give us a comment.', ja: '789年生のみなさん、一言お願いします。' },
-      { speaker: 'B', en: 'Thank you for coming! See you!', ja: '来てくれてありがとう！またね！' },
+      { speaker: 'A', en: 'The No.3 shop is {Blue Shop}!', ja: '3位のお店は【ブルー・ショップ】！' },
+      { speaker: 'B', en: 'The No.2 shop is {Kaze Fashion}!', ja: '2位のお店は【カゼ・ファッション】！' },
+      { speaker: 'A', en: "And the No.1 shop is ... {Lucy's Shop}! Let's give a big hand!", ja: 'そして1位は……【ルーシーの店】！大きな拍手を！' },
+      { speaker: 'B', en: 'Grade 7, 8 and 9, please give us a comment.', ja: '789年生のみなさん、一言お願いします。' },
+      { speaker: 'A', en: 'Thank you for coming! See you!', ja: '来てくれてありがとう！またね！' },
     ],
-    note: '司会をやる人の練習。MC-A の人は A、MC-B の人は B を選んで読もう。大きな声で、ゆっくり、顔を上げて。台本は「P7 司会MCカード」と同じ。',
+    note: '司会をやる人の練習。MC-A の人は A、MC-B の人は B を選んで読もう。{…}には本当のお店の名前が入るよ。大きな声で、ゆっくり、顔を上げて。台本は「P7 司会MCカード」と同じ。',
   },
   {
     // P6 Seasons Guide：観光客Lucyに、おすすめの季節を紹介する（冊子 p.3 観光客カード・ポスターと同じ4行）。あなたはガイド(B)。
