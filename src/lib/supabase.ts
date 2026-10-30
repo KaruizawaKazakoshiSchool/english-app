@@ -9,7 +9,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
+  supabaseAnonKey || 'placeholder',
+  // Googleログイン（準備中）：戻ってくるときに ?code= で受け取る方式。
+  // ハッシュ（#access_token=…）で返す方式だと HashRouter の #/ とぶつかるため
+  { auth: { flowType: 'pkce' } }
 );
 
 // We define a standard interface for the student data structure
