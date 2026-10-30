@@ -39,7 +39,12 @@ Supabaseをデータベースとして使用。GitHub Pagesにデプロイ済み
   - キーは Supabase Secrets（`GEMINI_API_KEY` ほか）。値は山田が管理画面で入れる
 - クラス全体の1日の上限は `api_usage` ＋ `consume_api_quota`。端末ごとの上限（localStorage）も併用
 - なりすまし対策の応急処置：ポイントを使うときの合言葉（`spend_pins` ＋ `set/check/reset_spend_pin`）。
-  本命は学園アカウントでのGoogleログイン（未着手・学園の情報担当に確認中）
+  本命は学園アカウントでのGoogleログイン（**段階②・試験中** 2026-10-30〜）
+  - OAuthクライアントは学園のGoogle Cloud（project eigo-no-mori）。IDとシークレットはSupabaseの管理画面にだけ入れる（コード・チャットに書かない）
+  - 名簿 `students.email` に学園メール（さんだーが管理画面で入れる）。DB関数 `my_student_id()`/`my_student()`、ポリシー `google_read`（学園ドメインは読める）`google_update_own`/`google_insert_own`（自分の行だけ書ける）
+  - `auth.users` のトリガー `guard_signup_domain`：kazakoshi.ed.jp / kazakoshi.jp / kazakoshi.app 以外はアカウントを作らせない
+  - アプリは URL に `?google=1` のときだけ「学園のGoogleで入る」を出す。入ったら名前選びなしで自分の記録へ（Login.tsx）
+  - 段階③の前に直す：名前一覧を出さない／マイ単語（設定行への書きこみ）／スタッフの先生画面
 - `.env` には Supabase のURLと公開用の anon キーだけ（`.gitignore` 済み）
 
 ## セキュリティの約束
