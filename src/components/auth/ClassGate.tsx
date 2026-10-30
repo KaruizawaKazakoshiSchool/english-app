@@ -14,6 +14,22 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // 学園のGoogleで入る（段階②・試験中）。URLに ?google=1 を付けたときだけ出す（子どもにはまだ見せない）
+  const showGoogle = new URLSearchParams(window.location.search).get('google') === '1';
+  const handleGoogle = async () => {
+    setBusy(true);
+    setError('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // 戻り先＝このページ（?google=1 などは付けない）
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    if (error) { setError('Googleで 入れなかったよ。もういちど 試してね'); setBusy(false); }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const password = word.trim();
@@ -125,6 +141,13 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
           {busy ? '確認中…' : '始める'}
         </button>
       </form>
+
+      {showGoogle && (
+        <button onClick={handleGoogle} disabled={busy} className="btn"
+          style={{ padding: '0.7rem 1.6rem', fontSize: '1.1rem', background: 'white', color: '#1a73e8', border: '2px solid #1a73e8', borderRadius: '999px', fontWeight: 'bold', cursor: 'pointer' }}>
+          🔵 学園のGoogleで 入る
+        </button>
+      )}
     </div>
   );
 };

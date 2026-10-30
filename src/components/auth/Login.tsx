@@ -13,6 +13,21 @@ export const Login: React.FC = () => {
   const [classFilter, setClassFilter] = useState<'all' | 'A' | 'B'>('all');
   const visibleStudents = STUDENTS.filter(s => classFilter === 'all' || s.cls === classFilter);
 
+  // 学園のGoogleで入った人は、名前を選ばずに自分の記録へ（段階②・試験中）。
+  // 名簿の email と一致する行だけ。合わなければ案内して、Googleからぬける
+  const [googleMsg, setGoogleMsg] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email || '';
+      if (!email || email.endsWith('@kazakoshi.app')) return;   // クラス共用アカウント＝今までどおり名前を選ぶ
+      const { data } = await supabase.rpc('my_student');
+      const me = Array.isArray(data) ? data[0] : null;
+      if (me?.id) { doLogin(me.id, me.name); return; }
+      setGoogleMsg('この 学園アカウントは、まだ 名簿に つながっていないよ。先生に 伝えてね');
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 各生徒の装備中称号の絵文字（名前タイルに表示して競争心を後押し）。
   // fetch失敗してもログインは妨げない（絵文字なしで普通に表示）。
   const [titleEmojiById, setTitleEmojiById] = useState<Record<string, string>>({});
@@ -119,6 +134,13 @@ export const Login: React.FC = () => {
         <h1 className="text-primary" style={{ fontSize: '3rem' }}>Eigo no Mori 🌳</h1>
         <p style={{ fontSize: '1.2rem' }}>名前をタップして始めよう！</p>
       </div>
+
+      {googleMsg && (
+        <div style={{ background: '#fff7ed', border: '2px solid #f59e0b', borderRadius: '12px', padding: '0.8rem 1rem', textAlign: 'center', fontWeight: 'bold' }}>
+          {googleMsg}
+          <div><button className="btn" style={{ marginTop: '0.5rem' }} onClick={() => supabase.auth.signOut()}>ぬける</button></div>
+        </div>
+      )}
 
       <RecentUpdates />
 
