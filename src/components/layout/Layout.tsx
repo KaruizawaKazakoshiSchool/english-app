@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { logoutEntry } from '../../lib/googleEntry';
 import { Home, LogOut, Star, Coins } from 'lucide-react';
 import { usePoints } from '../../hooks/usePoints';
 import { useAppSettings } from '../../hooks/useAppSettings';
@@ -72,9 +73,8 @@ export const Layout: React.FC = () => {
 
   const title = findTitle(shop.equippedTitle);   // 名前の上に小さく出す（子どもの声 2026-10-09）
 
-  const handleLogout = () => {
-    localStorage.removeItem('studentId');
-    localStorage.removeItem('studentName');
+  const handleLogout = async () => {
+    if (await logoutEntry()) return;   // Googleで入っていたら、Googleの入口へ
     navigate('/');
   };
 

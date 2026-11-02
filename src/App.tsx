@@ -6,6 +6,7 @@ import { loadRoster } from './data/students';
 import { Layout } from './components/layout/Layout';
 import { Home } from './components/home/Home';
 import { Stage } from './components/stage/Stage';
+import { prepareEntry } from './lib/googleEntry';
 
 // ステージを id ごとに作り直す（「次のステージへ」で /stage/8 → /stage/9 に移ったとき、前のクリア画面が残らないように）
 const StageRoute = () => { const { id } = useParams<{ id: string }>(); return <Stage key={id} />; };
@@ -45,10 +46,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // 端末に保存されたログイン状態を確認（初回だけ合言葉、以後はスキップ）
-    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+    // 入口の整理（lib/googleEntry）が終わるまでは画面を出さない（前の人の画面が一瞬でも動かないように）
+    let prepared = false;
+    prepareEntry().then(ok => { prepared = true; setAuthed(ok); }, () => { prepared = true; setAuthed(false); });
     // ログイン／ログアウトの変化に追従（別タブでの変化やトークン失効にも対応）
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthed(!!session);
+      if (prepared) setAuthed(!!session);
     });
     return () => sub.subscription.unsubscribe();
   }, []);

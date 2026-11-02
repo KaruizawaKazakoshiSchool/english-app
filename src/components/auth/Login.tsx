@@ -138,7 +138,7 @@ export const Login: React.FC = () => {
       {googleMsg && (
         <div style={{ background: '#fff7ed', border: '2px solid #f59e0b', borderRadius: '12px', padding: '0.8rem 1rem', textAlign: 'center', fontWeight: 'bold' }}>
           {googleMsg}
-          <div><button className="btn" style={{ marginTop: '0.5rem' }} onClick={() => supabase.auth.signOut()}>ぬける</button></div>
+          <div><button className="btn" style={{ marginTop: '0.5rem' }} onClick={() => supabase.auth.signOut({ scope: 'local' })}>ぬける</button></div>
         </div>
       )}
 

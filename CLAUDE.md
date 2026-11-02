@@ -44,6 +44,7 @@ Supabaseをデータベースとして使用。GitHub Pagesにデプロイ済み
   - 名簿 `students.email` に学園メール（さんだーが管理画面で入れる）。DB関数 `my_student_id()`/`my_student()`、ポリシー `google_read`（学園ドメインは読める）`google_update_own`/`google_insert_own`（自分の行だけ書ける）
   - `auth.users` のトリガー `guard_signup_domain`：kazakoshi.ed.jp / kazakoshi.jp / kazakoshi.app 以外はアカウントを作らせない
   - アプリは URL に `?google=1` のときだけ「学園のGoogleで入る」を出す。入ったら名前選びなしで自分の記録へ（Login.tsx）
+  - 入口の整理は `src/lib/googleEntry.ts`：?google=1 で開くと端末の合言葉の入室・前の人の番号を消す／「おわる」はGoogleの入室も消す。signOut は必ず `scope: 'local'`（既定の global だと共用アカウントの全端末が出される）
   - 段階③の前に直す：名前一覧を出さない／マイ単語（設定行への書きこみ）／スタッフの先生画面
 - `.env` には Supabase のURLと公開用の anon キーだけ（`.gitignore` 済み）
 
