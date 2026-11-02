@@ -15,7 +15,7 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // 学園のGoogleで入る（段階②・試験中）。URLに ?google=1 を付けたときだけ出す（子どもにはまだ見せない）
+  // 学園のGoogleで入る（段階②・試験中）。URLに ?google=1 を付けたときだけ出す（旧URLの案内ページ・お知らせの紙はこのURL）
   const showGoogle = showGoogleButton();
   const handleGoogle = async () => {
     setBusy(true);
@@ -46,6 +46,8 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
         setError('合言葉が 違うよ。もういちど！');
         setWord('');
       } else {
+        // ?google=1 を残すと、読み込み直したときに合言葉の入室が消されてしまう（prepareEntry）
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash);
         onAuthed();
       }
     } catch {

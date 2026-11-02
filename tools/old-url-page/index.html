@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eigo no Mori 新しいURL</title>
+<style>
+:root{ --main:#111114; --accent:#E23E14; --text:#2A2C30; --sub:#6E6E6A; --rule:#DEDEDA; }
+*{ box-sizing:border-box; border-radius:0; }
+body{
+  margin:0; background:#fff; color:var(--text);
+  font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans",sans-serif;
+  font-feature-settings:"palt" 1; font-weight:500; line-height:1.7;
+}
+main{ max-width:560px; margin:0 auto; padding:40px 16px 48px; }
+.logo{ font-weight:900; color:var(--main); margin:0 0 40px; }
+h1{ font-weight:900; font-size:2.2rem; line-height:1.3; letter-spacing:-0.02em; color:var(--main); margin:0 0 24px; }
+.go{
+  display:block; padding:18px; text-align:center; font-weight:900; font-size:1.2rem;
+  background:var(--main); color:#fff; text-decoration:none;
+}
+.count{ min-height:1.7em; margin:10px 0 0; color:var(--accent); font-weight:700; }
+.note{ margin:4px 0 0; color:var(--sub); font-size:.9rem; }
+section{ margin-top:48px; padding-top:32px; border-top:1px solid var(--rule); }
+h2{ font-weight:900; font-size:1.2rem; color:var(--main); margin:0 0 12px; }
+input,textarea{
+  display:block; width:100%; padding:12px; margin-bottom:10px;
+  font:inherit; color:var(--text); background:#fff; border:2px solid var(--main);
+}
+textarea{ height:110px; resize:none; }
+button{
+  width:100%; padding:14px; font:inherit; font-weight:900;
+  background:var(--main); color:#fff; border:none; cursor:pointer;
+}
+button:disabled{ background:var(--rule); color:var(--sub); cursor:default; }
+#result{ min-height:1.7em; margin:10px 0 0; font-weight:700; color:var(--main); }
+[hidden]{ display:none; }
+</style>
+</head>
+<body>
+<main>
+  <p class="logo">Eigo no Mori</p>
+  <h1>アプリの新しいURLは こちら</h1>
+  <a class="go" id="go" href="#">新しいURLを 開く</a>
+  <p class="count" id="count"></p>
+  <p class="note">開いたら、ブックマークも入れ直してね。</p>
+
+  <section>
+    <h2>もし動かないときは、ここから教えてね</h2>
+    <input id="name" placeholder="名前" maxlength="40" aria-label="名前" hidden>
+    <textarea id="msg" maxlength="1000" placeholder="（れい）入ろうとしたら、画面が止まった" aria-label="困っていること"></textarea>
+    <button id="send" disabled>送る</button>
+    <p id="result" role="status"></p>
+  </section>
+</main>
+
+<script>
+// 旧URL（thunder-19900512.github.io）の案内ページ。新URLへ自動で飛ばす。
+// 字を書き始めたら自動で飛ばすのをやめる／新URLから「もどる」で来たときは飛ばさない（声を書けるように）。
+// __SUPABASE_URL__ と __ANON_KEY__ は公開するときに埋める（このファイルには書かない）。公開用のキーなので、公開ファイルには入ってよい。
+// 声は DB関数 old_url_voice（ログインなしで呼べる入口はこれだけ）で feedback に届く。screen は 'old-url'。
+const NEW_URL = 'https://karuizawakazakoshischool.github.io/english-app/?google=1';
+const RPC = '__SUPABASE_URL__/rest/v1/rpc/old_url_voice';
+const KEY = '__ANON_KEY__';
+const WAIT = 8;
+
+const $ = id => document.getElementById(id);
+const read = (store, k) => { try { return store.getItem(k); } catch { return null; } };
+const write = (store, k, v) => { try { store.setItem(k, v); } catch {} };
+
+$('go').href = NEW_URL;
+const savedId = read(localStorage, 'studentId');
+const savedName = read(localStorage, 'studentName');
+if (!savedName) $('name').hidden = false;
+
+let left = WAIT, timer = null;
+const stop = () => { clearInterval(timer); timer = null; $('count').textContent = ''; };
+const tick = () => {
+  if (left <= 0) {
+    stop();
+    write(sessionStorage, 'jumped', '1');
+    location.href = NEW_URL;
+    return;
+  }
+  $('count').textContent = `${left}秒後に 自動で開くよ`;
+  left--;
+};
+const start = () => {
+  if (read(sessionStorage, 'jumped')) return;
+  tick();
+  timer = setInterval(tick, 1000);
+};
+$('go').addEventListener('click', () => { stop(); write(sessionStorage, 'jumped', '1'); });
+// 「もどる」で戻ったときは、ブラウザが前の状態のまま見せることがあるので止める
+addEventListener('pageshow', e => { if (e.persisted) stop(); });
+['msg', 'name'].forEach(id => $(id).addEventListener('focus', stop));
+$('msg').addEventListener('input', () => { $('send').disabled = !$('msg').value.trim(); });
+
+$('send').addEventListener('click', async () => {
+  const message = $('msg').value.trim();
+  if (!message) return;
+  $('send').disabled = true;
+  $('result').textContent = '送っています…';
+  let ok = false;
+  try {
+    const res = await fetch(RPC, {
+      method: 'POST',
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_message: message,
+        p_student_id: savedId,
+        p_student_name: savedName || $('name').value.trim(),
+        p_ua: navigator.userAgent,
+      }),
+    });
+    ok = res.ok && (await res.json()) === true;
+  } catch {}
+  if (ok) {
+    $('msg').value = '';
+    $('result').textContent = '送ったよ！ 先生に届きます。ありがとう！';
+  } else {
+    $('send').disabled = false;
+    $('result').textContent = '送れませんでした。もう一度試してね';
+  }
+});
+
+start();
+</script>
+</body>
+</html>

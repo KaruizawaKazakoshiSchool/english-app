@@ -26,9 +26,11 @@ Supabaseをデータベースとして使用。GitHub Pagesにデプロイ済み
 ## いまの仕組み（2026-09-24 時点）
 
 - **フロントエンド**: React 19 + TypeScript + Vite。公開は GitHub Pages（`npm run deploy`）
-  - **2026-10-19〜 学園のGitHub組織 `KaruizawaKazakoshiSchool/english-app` へ移行中**。新URL https://karuizawakazakoshischool.github.io/english-app/
-  - 切りかえまでは `npm run deploy` が旧（thunder-19900512）と新（学園）の両方に公開する。push も `git push origin main && git push school main` の両方へ
-  - 新リポジトリには main だけを送った（名簿を外した後の履歴）。旧 gh-pages ブランチ（6月〜・名簿入りの時期を含む）は送らない
+  - **2026-11-02 切りかえ済み**：公開先は学園のGitHub組織 `KaruizawaKazakoshiSchool/english-app`。URL https://karuizawakazakoshischool.github.io/english-app/（`npm run deploy` はここだけに公開）
+  - 旧URL（thunder-19900512）は案内ページ1枚（`tools/old-url-page/index.html`。8秒で `?google=1` 付きの新URLへ飛ぶ／字を書き始めると止まる）。声は DB関数 `old_url_voice`（ログインなしで呼べる・1日100件まで）で feedback に届く（screen='old-url'）
+  - 案内ページを直すとき：`__SUPABASE_URL__`／`__ANON_KEY__` を埋めたコピーを作り、`npx gh-pages -d <コピーのフォルダ>` で旧URLへ（リポジトリのファイルにキーは書かない）
+  - push は `git push origin main && git push school main` の両方へ
+  - 新リポジトリには main だけを送った（名簿を外した後の履歴）。旧 gh-pages ブランチの履歴（6月〜・名簿入りの時期を含む）は新リポジトリに送らない。**旧リポジトリには履歴がまだ残っている（公開リポジトリ）**
 - **DB**: Supabase（プロジェクト「English Learning Adventure」）。ログインは「あいことば」1つのクラス共用アカウント
 - **AI・音声のキーはブラウザに置かない**。Supabase の Edge Function（`supabase/functions/`）が中継する
   - `gemini` … AI英会話・お話づくり（アプリ側は `src/lib/aiProxy.ts` から呼ぶ）
