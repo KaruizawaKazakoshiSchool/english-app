@@ -7,6 +7,19 @@ import { supabase } from './supabase';
 // 消すのはこの端末の入室だけ。signOut は必ず scope:'local'（既定の global だと、
 // クラス共用アカウントで入っている全員の端末が出されてしまう）。
 
+// ?google=1 は ＃ の前でも後ろでも効かせる（…/#/home?google=1 のように後ろに付けても ボタンが出るように）
+export const urlWantsGoogle = () =>
+  /[?&]google=1\b/.test(window.location.search) || /[?&]google=1\b/.test(window.location.hash);
+
+// 1度 ?google=1 で開いた端末は、Googleから失敗して戻ってきたときもボタンを出す（段階②の試験用）
+export const showGoogleButton = () => {
+  const want = urlWantsGoogle();
+  try {
+    if (want) localStorage.setItem('googleTrial', '1');
+    return want || localStorage.getItem('googleTrial') === '1';
+  } catch { return want; }
+};
+
 export const isGoogleEmail = (email?: string | null) => !!email && !email.endsWith('@kazakoshi.app');
 
 const forgetStudent = () => {
@@ -18,7 +31,7 @@ const forgetStudent = () => {
 export const prepareEntry = async (): Promise<boolean> => {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
-  const wantGoogle = new URLSearchParams(window.location.search).get('google') === '1';
+  const wantGoogle = urlWantsGoogle();
   const google = isGoogleEmail(session?.user?.email);
 
   if (wantGoogle && !google) {

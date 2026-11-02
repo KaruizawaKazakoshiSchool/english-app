@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { showGoogleButton } from '../../lib/googleEntry';
 
 // クラス共通の「合言葉」入力画面。
 // この端末で初めて開いたときだけ表示され、正しい合言葉を入れると
@@ -15,7 +16,7 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
   const [busy, setBusy] = useState(false);
 
   // 学園のGoogleで入る（段階②・試験中）。URLに ?google=1 を付けたときだけ出す（子どもにはまだ見せない）
-  const showGoogle = new URLSearchParams(window.location.search).get('google') === '1';
+  const showGoogle = showGoogleButton();
   const handleGoogle = async () => {
     setBusy(true);
     setError('');
