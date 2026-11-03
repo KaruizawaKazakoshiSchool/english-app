@@ -145,7 +145,7 @@ const readAuthFailed = () => {
 // 「⚠️ Azureエラー」ではなく「お知らせ」として出す。
 export const CAP_NOTICE =
   '🌙 今日ぶんの 発音チェックは 終わり！ こわれてないよ。'
-  + 'みんなで たくさん使ったので、また明日 使えるようになるよ。'
+  + 'この端末で 今日たくさん使ったので、また明日 使えるようになるよ。'
   + '今日は「聞く」「書く」「タイピング」で 練習しよう！';
 
 export const usePronunciationAssessment = () => {
@@ -239,6 +239,7 @@ export const usePronunciationAssessment = () => {
         // 「⚠️Azureエラー」と並べると子どもには意味が伝わらない（子どもの声 2026-09-16）。
         // 故障ではなく「今日ぶんを使い切った」ことと、代わりにできることを伝える。
         setError(CAP_NOTICE);
+        lastErrorRef.current = CAP_NOTICE;   // ダイアログ等のトーストが「声が聞こえなかった」と出していた（子どもの声 2026-11-03）
         return null;
       }
 

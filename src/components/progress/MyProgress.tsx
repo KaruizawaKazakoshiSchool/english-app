@@ -10,6 +10,7 @@ import { DIALOGUES } from '../dialogue/dialogueData';
 import { isArchived } from '../../data/archivedUnits';
 import { useDictionaryProgress, type DictCategoryProgress } from '../../hooks/useDictionaryProgress';
 import { usePronunciationHistory, type ScoreMode } from '../../hooks/usePronunciationHistory';
+import { STUDENTS } from '../../data/students';
 
 const MODE_STYLE: Record<ScoreMode, { color: string; label: string }> = {
   battle: { color: '#ff6b6b', label: 'モンスターバトル' },
@@ -29,11 +30,12 @@ const SKILLS: { key: keyof DictCategoryProgress; label: string; emoji: string; p
 ];
 
 // 進捗リング（％を円グラフで表示）
-const Ring: React.FC<{ pct: number; color: string; label: string; sub: string; emoji: string }> = ({ pct, color, label, sub, emoji }) => {
+// 押すと、その活動の画面へ（子どもの声 2026-11-03「ダイアログのところ押したら そのままダイアログに」）
+const Ring: React.FC<{ pct: number; color: string; label: string; sub: string; emoji: string; onClick: () => void }> = ({ pct, color, label, sub, emoji, onClick }) => {
   const R = 42;
   const C = 2 * Math.PI * R;
   return (
-    <div className="glass-card flex-col flex-center" style={{ padding: '1.2rem', gap: '0.4rem' }}>
+    <div className="glass-card flex-col flex-center hover-scale" role="button" onClick={onClick} style={{ padding: '1.2rem', gap: '0.4rem', cursor: 'pointer' }}>
       <div style={{ position: 'relative', width: '110px', height: '110px' }}>
         <svg width="110" height="110" viewBox="0 0 110 110">
           <circle cx="55" cy="55" r={R} fill="none" stroke="#e2e8f0" strokeWidth="11" />
@@ -49,7 +51,7 @@ const Ring: React.FC<{ pct: number; color: string; label: string; sub: string; e
           <text x="55" y="72" textAnchor="middle" fontSize="11" fill="#666">{sub}</text>
         </svg>
       </div>
-      <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#2d3436', textAlign: 'center' }}>{emoji} {label}</div>
+      <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#2d3436', textAlign: 'center' }}>{emoji} {label} ›</div>
     </div>
   );
 };
@@ -64,6 +66,7 @@ export const MyProgress: React.FC = () => {
   const categories = useMemo(() => Array.from(new Set(vocabulary.map(v => v.category))), [vocabulary]);
 
   const studentId = localStorage.getItem('studentId');
+  const myGrade = STUDENTS.find(s => s.id === studentId)?.grade;   // Test・おためしは学年なし＝全部から
   const points = parseInt(localStorage.getItem(`points_${studentId}`) || '0', 10);
   const badges: number[] = useMemo(() => {
     const dataStr = studentId ? localStorage.getItem(`student_${studentId}`) : null;
@@ -121,17 +124,31 @@ export const MyProgress: React.FC = () => {
   const yFor = (score: number) => padT + plotH - (score / 100) * plotH;
   const linePoints = recent.map((r, i) => `${xFor(i)},${yFor(r.score)}`).join(' ');
 
-  // 「次にやるといいよ」：まだ達成が少ない順に、最初の未挑戦スキルをおすすめ
+  // 「次にやってみよう」：英語の活動全体から、まだのものを出す（子どもの声 2026-11-03「言葉さがししか出ない」）。
+  //   辞書は 手をつけた単元を先に（1つを深めるほうが得＝ポイント設計ルール5）、モードが重ならないように2つまで。
+  //   そのあと ダイアログ・教科書・フォニックスの「まだ」を1つずつ。
   const recommendations = useMemo(() => {
-    return catStats
+    const recs: { key: string; label: string; to: string }[] = [];
+    const usedSkills = new Set<string>();
+    const dictCands = catStats
       .filter(c => c.done < SKILLS.length)
-      .sort((a, b) => a.done - b.done)
-      .slice(0, 3)
-      .map(c => {
-        const nextSkill = SKILLS.find(s => !(c.p as any)[s.key])!;
-        return { cat: c.cat, skill: nextSkill };
-      });
-  }, [catStats]);
+      .sort((a, b) => (b.done > 0 ? 1 : 0) - (a.done > 0 ? 1 : 0) || b.done - a.done);
+    for (const c of dictCands) {
+      if (recs.length >= 2) break;
+      const skill = SKILLS.find(s => !(c.p as any)[s.key] && !usedSkills.has(s.key));
+      if (!skill) continue;
+      usedSkills.add(skill.key);
+      recs.push({ key: `dict-${c.cat}`, label: `${skill.emoji} ${c.cat} の${skill.label}`, to: `/dictionary/${encodeURIComponent(c.cat)}/${skill.path}` });
+    }
+    const forMe = (g: number) => !myGrade || g === myGrade;
+    const d = dialogueList.find(x => forMe(x.grade) && !(clearCounts[`dialogue_${x.id}`] > 0));
+    if (d) recs.push({ key: `dlg-${d.id}`, label: `🗣️ ダイアログ ${d.unitName}`, to: `/dialogue?grade=${d.grade}&id=${d.id}` });
+    const q = DEFAULT_QUIZZES.find(x => forMe(x.grade) && !(clearCounts[`textbook_quiz_${x.id}`] > 0));
+    if (q) recs.push({ key: `tb-${q.id}`, label: `📖 教科書 ${q.unitName}`, to: `/textbook?grade=${q.grade}&id=${q.id}` });
+    const st = coreStages.find(x => !badges.includes(x.id));
+    if (st) recs.push({ key: `ph-${st.id}`, label: `🔤 フォニックス ${st.title}`, to: `/stage/${st.id}` });
+    return recs;
+  }, [catStats, dialogueList, clearCounts, coreStages, badges, myGrade]);
 
   const colorFor = (done: number) => {
     if (done === SKILLS.length) return { bg: 'rgba(0, 184, 148, 0.15)', border: '#00b894', label: 'マスター！', labelColor: '#00b894' };
@@ -150,16 +167,16 @@ export const MyProgress: React.FC = () => {
 
       {/* 3領域のざっくり進捗 */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
-        <Ring pct={phonicsPct} color="#ff6b6b" emoji="🔤" label="Phonics" sub={`${coreBadgeCount}/${coreStages.length}`} />
-        <Ring pct={dictPct} color="#48dbfb" emoji="📚" label="Picture Dictionary" sub={`${masteredCount}/${categories.length} 単元`} />
-        <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${DEFAULT_QUIZZES.length} Unit`} />
-        <Ring pct={dialoguePct} color="#0984e3" emoji="🗣️" label="ダイアログ" sub={`${dialogueDone}/${dialogueList.length} 会話`} />
+        <Ring pct={phonicsPct} color="#ff6b6b" emoji="🔤" label="Phonics" sub={`${coreBadgeCount}/${coreStages.length}`} onClick={() => navigate('/home')} />
+        <Ring pct={dictPct} color="#48dbfb" emoji="📚" label="Picture Dictionary" sub={`${masteredCount}/${categories.length} 単元`} onClick={() => navigate('/home?tab=dictionary')} />
+        <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${DEFAULT_QUIZZES.length} Unit`} onClick={() => navigate(myGrade ? `/textbook?grade=${myGrade}` : '/textbook')} />
+        <Ring pct={dialoguePct} color="#0984e3" emoji="🗣️" label="ダイアログ" sub={`${dialogueDone}/${dialogueList.length} 会話`} onClick={() => navigate(myGrade ? `/dialogue?grade=${myGrade}` : '/dialogue')} />
       </div>
 
       {/* お話づくり・AI英会話（回数で見せる） */}
       <div className="glass-card" style={{ padding: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '1.1rem' }}>
-        <span>📚 お話づくり <strong>{storyCount}</strong> 回</span>
-        <span>🤖 AI英会話 クリア <strong>{aiClearCount}</strong> 回</span>
+        <button className="hover-scale" onClick={() => navigate('/story')} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 'inherit', color: 'inherit' }}>📚 お話づくり <strong>{storyCount}</strong> 回 ›</button>
+        <button className="hover-scale" onClick={() => navigate('/ai')} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 'inherit', color: 'inherit' }}>🤖 AI英会話 クリア <strong>{aiClearCount}</strong> 回 ›</button>
       </div>
 
       {/* ポイント・トロフィー */}
@@ -266,14 +283,14 @@ export const MyProgress: React.FC = () => {
         <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(162, 155, 254, 0.12)', border: '2px solid #a29bfe' }}>
           <h3 style={{ margin: '0 0 1rem 0', color: '#6c5ce7' }}>✨ 次にやってみよう！</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
-            {recommendations.map(({ cat, skill }) => (
+            {recommendations.map(r => (
               <button
-                key={cat + skill.key}
+                key={r.key}
                 className="hover-scale"
-                onClick={() => navigate(`/dictionary/${encodeURIComponent(cat)}/${skill.path}`)}
+                onClick={() => navigate(r.to)}
                 style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', border: '2px solid #a29bfe', background: 'white', cursor: 'pointer', fontWeight: 'bold', color: '#6c5ce7', fontSize: '1rem' }}
               >
-                {skill.emoji} {cat} の{skill.label}
+                {r.label}
               </button>
             ))}
           </div>
