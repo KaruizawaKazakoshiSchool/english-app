@@ -66,6 +66,7 @@ export const findFrame = (id: string | null | undefined) => FRAMES.find(f => f.i
 // 今月限定の着せ替え（2026-10〜）。称号と同じく、その月だけ買えて、買ったものはずっと使える。
 export const SEASONAL_THEMES: SeasonalTitle[] = [
   { month: 10, id: 'th-halloween', emoji: '🎃', name: 'ハロウィンテーマ', desc: 'オレンジとむらさきの、ちょっとこわい夜', price: 400 },
+  { month: 11, id: 'th-momiji', emoji: '🍁', name: 'もみじテーマ', desc: '赤とオレンジの、秋の画面', price: 400 },
 ];
 export const seasonalThemesThisMonth = () => SEASONAL_THEMES.filter(t => t.month === currentMonth());
 

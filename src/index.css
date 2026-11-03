@@ -486,6 +486,12 @@ body.has-theme-gradient {
   --color-bg-primary: #fff4e6;
   --theme-gradient: linear-gradient(160deg, #ffd8a8 0%, #fdba74 35%, #c4b5fd 75%, #a78bfa 100%);
 }
+:root[data-theme='th-momiji'] {
+  --color-primary: #c2410c; --color-primary-hover: #9a3412;
+  --color-secondary: #ea580c; --color-accent: #f59e0b;
+  --color-bg-primary: #fff7ed;
+  --theme-gradient: linear-gradient(160deg, #fde68a 0%, #fdba74 35%, #f87171 75%, #dc2626 100%);
+}
 
 :root[data-theme='th-fuji'] {
   --color-primary: #8e6bbf; --color-primary-hover: #7a58ab;
