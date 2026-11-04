@@ -99,12 +99,14 @@ export const MyProgress: React.FC = () => {
   const dictPct = dictTotal > 0 ? Math.round((dictDone / dictTotal) * 100) : 0;
   const masteredCount = catStats.filter(c => c.done === SKILLS.length).length;
 
-  // 教科書モード：クリアしたUnit数 / 全Unit
-  const textbookDone = DEFAULT_QUIZZES.filter(q => (clearCounts[`textbook_quiz_${q.id}`] || 0) > 0).length;
-  const textbookPct = DEFAULT_QUIZZES.length > 0 ? Math.round((textbookDone / DEFAULT_QUIZZES.length) * 100) : 0;
+  // 教科書モード・ダイアログは自分の学年の分だけで数える（子どもの声 2026-11-04「5年は全部やったのに50%」＝両学年で割っていた）
+  const forMe = (g: number) => !myGrade || g === myGrade;
+  const textbookList = DEFAULT_QUIZZES.filter(q => forMe(q.grade));
+  const textbookDone = textbookList.filter(q => (clearCounts[`textbook_quiz_${q.id}`] || 0) > 0).length;
+  const textbookPct = textbookList.length > 0 ? Math.round((textbookDone / textbookList.length) * 100) : 0;
 
   // ダイアログ・お話づくり・AI英会話の記録（子どもの声 2026-10-17「ダイアログとかお話作りの記録もほしい」）
-  const dialogueList = DIALOGUES.filter(d => !isArchived(d.id));
+  const dialogueList = DIALOGUES.filter(d => !isArchived(d.id) && forMe(d.grade));
   const dialogueDone = dialogueList.filter(d => (clearCounts[`dialogue_${d.id}`] || 0) > 0).length;
   const dialoguePct = dialogueList.length > 0 ? Math.round((dialogueDone / dialogueList.length) * 100) : 0;
   const storyCount = (clearCounts['story_mode'] || 0) + (clearCounts['story_mode_reading'] || 0);
@@ -140,15 +142,14 @@ export const MyProgress: React.FC = () => {
       usedSkills.add(skill.key);
       recs.push({ key: `dict-${c.cat}`, label: `${skill.emoji} ${c.cat} の${skill.label}`, to: `/dictionary/${encodeURIComponent(c.cat)}/${skill.path}` });
     }
-    const forMe = (g: number) => !myGrade || g === myGrade;
-    const d = dialogueList.find(x => forMe(x.grade) && !(clearCounts[`dialogue_${x.id}`] > 0));
+    const d = dialogueList.find(x => !(clearCounts[`dialogue_${x.id}`] > 0));
     if (d) recs.push({ key: `dlg-${d.id}`, label: `🗣️ ダイアログ ${d.unitName}`, to: `/dialogue?grade=${d.grade}&id=${d.id}` });
-    const q = DEFAULT_QUIZZES.find(x => forMe(x.grade) && !(clearCounts[`textbook_quiz_${x.id}`] > 0));
+    const q = textbookList.find(x => !(clearCounts[`textbook_quiz_${x.id}`] > 0));
     if (q) recs.push({ key: `tb-${q.id}`, label: `📖 教科書 ${q.unitName}`, to: `/textbook?grade=${q.grade}&id=${q.id}` });
     const st = coreStages.find(x => !badges.includes(x.id));
     if (st) recs.push({ key: `ph-${st.id}`, label: `🔤 フォニックス ${st.title}`, to: `/stage/${st.id}` });
     return recs;
-  }, [catStats, dialogueList, clearCounts, coreStages, badges, myGrade]);
+  }, [catStats, dialogueList, textbookList, clearCounts, coreStages, badges]);
 
   const colorFor = (done: number) => {
     if (done === SKILLS.length) return { bg: 'rgba(0, 184, 148, 0.15)', border: '#00b894', label: 'マスター！', labelColor: '#00b894' };
@@ -169,7 +170,7 @@ export const MyProgress: React.FC = () => {
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
         <Ring pct={phonicsPct} color="#ff6b6b" emoji="🔤" label="Phonics" sub={`${coreBadgeCount}/${coreStages.length}`} onClick={() => navigate('/home')} />
         <Ring pct={dictPct} color="#48dbfb" emoji="📚" label="Picture Dictionary" sub={`${masteredCount}/${categories.length} 単元`} onClick={() => navigate('/home?tab=dictionary')} />
-        <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${DEFAULT_QUIZZES.length} Unit`} onClick={() => navigate(myGrade ? `/textbook?grade=${myGrade}` : '/textbook')} />
+        <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${textbookList.length} Unit`} onClick={() => navigate(myGrade ? `/textbook?grade=${myGrade}` : '/textbook')} />
         <Ring pct={dialoguePct} color="#0984e3" emoji="🗣️" label="ダイアログ" sub={`${dialogueDone}/${dialogueList.length} 会話`} onClick={() => navigate(myGrade ? `/dialogue?grade=${myGrade}` : '/dialogue')} />
       </div>
 
