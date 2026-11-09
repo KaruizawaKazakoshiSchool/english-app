@@ -14,6 +14,7 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-11-09', text: '🐾 辞書に「生き物の問題＋」（habitat loss・alien species・natural disasters など16こ）が ふえたよ。動物が減っている理由を 英語で言ってみよう' },
   { date: '2026-11-06', text: '🧴 辞書の「のり（glue）」の絵が ばんそうこうになっていたのを直したよ', fromVoice: true },
   { date: '2026-11-04', text: '🎤 発音チェックが 1日80回まで できるようになったよ（前は50回）', fromVoice: true },
   { date: '2026-11-04', text: '📖「自分の記録」の教科書モードとダイアログが、自分の学年の分で 数えるようになったよ（前は5年と6年の両方で数えていたよ）', fromVoice: true },

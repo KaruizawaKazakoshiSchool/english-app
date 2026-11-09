@@ -318,7 +318,7 @@ export const DIALOGUES: Dialogue[] = [
       { speaker: 'B', en: 'They live in {the sea}.', ja: '【海】に住んでいる。' },
       { speaker: 'A', en: 'We must reduce {plastic bags}.', ja: '【レジ袋】を減らさなきゃ。' },
     ],
-    relatedCategories: ['海の生き物'],
+    relatedCategories: ['海の生き物', '生き物の問題・できること', '生き物の問題＋（プラスアルファ）'],
   },
   {
     id: 'g6-u7', grade: 6, unitName: 'Unit 7: My Best Memory', targetPhrase: 'My best memory is the school trip.',
