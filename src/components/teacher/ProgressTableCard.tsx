@@ -43,10 +43,9 @@ export const ProgressTableCard: React.FC<{ students: any[] }> = ({ students }) =
     return (!from || d >= from) && (!to || d <= to);
   };
 
-  const rows: Row[] = useMemo(() => students
+  // 学年平均は、絞りこみ（クラス）に関係なく その学年の全員で出す
+  const allRows: Row[] = useMemo(() => students
     .filter(s => /^\d+$/.test(s.id) && s.id !== '00' && s.id !== '99')
-    .filter(s => grade === 'all' || String(s.grade) === grade)
-    .filter(s => cls === 'all' || s.cls === cls)
     .sort((a, b) => a.id.localeCompare(b.id))
     .map(s => {
       const cc: Record<string, number> = s.clear_counts || {};
@@ -77,32 +76,60 @@ export const ProgressTableCard: React.FC<{ students: any[] }> = ({ students }) =
         reflStarsAvg: starList.length ? Math.round((starList.reduce((a: number, b: number) => a + b, 0) / starList.length) * 10) / 10 : null,
         points: s.points || 0,
       };
-    }), [students, categories, from, to, grade, cls]);
+    }), [students, categories, from, to]);
+  const rows = allRows
+    .filter(r => grade === 'all' || String(r.grade) === grade)
+    .filter(r => cls === 'all' || r.cls === cls);
 
-  const COLS: { label: string; get: (r: Row) => string }[] = [
-    { label: '番号', get: r => r.id },
-    { label: '名前', get: r => r.name },
-    { label: '学年', get: r => (r.grade ? `${r.grade}年` : '') },
-    { label: 'クラス', get: r => r.cls },
-    { label: `フォニックス（/${coreStages.length}）`, get: r => String(r.phonics) },
-    { label: `辞書マスター単元（/${categories.length}）`, get: r => String(r.dictMastered) },
-    { label: `辞書モードのクリア（/${categories.length * DICT_SKILLS.length}）`, get: r => String(r.dictModes) },
-    { label: '教科書', get: r => `${r.textbook}/${r.textbookAll}` },
-    { label: 'ダイアログ', get: r => `${r.dialogue}/${r.dialogueAll}` },
-    { label: 'お話づくり（回）', get: r => String(r.story) },
-    { label: 'AI英会話クリア（回）', get: r => String(r.ai) },
-    { label: '発音 最高点', get: r => (r.pronBest ?? '') + '' },
-    { label: '発音 最近10回の平均', get: r => (r.pronAvg10 ?? '') + '' },
-    { label: '発音の回数', get: r => String(r.pronCount) },
-    { label: 'ふりかえり（日数）', get: r => String(r.reflDays) },
-    { label: 'ふりかえり ⭐平均', get: r => (r.reflStarsAvg ?? '') + '' },
-    { label: 'ポイント（これまでの合計）', get: r => String(r.points) },
+  // num があるもの＝数の列（学年平均と比べる）。表示は num の値（教科書・ダイアログは「n/全体」）
+  const COLS: { label: string; text?: (r: Row) => string; num?: (r: Row) => number | null }[] = [
+    { label: '番号', text: r => r.id },
+    { label: '名前', text: r => r.name },
+    { label: '学年', text: r => (r.grade ? `${r.grade}年` : '') },
+    { label: 'クラス', text: r => r.cls },
+    { label: `フォニックス（/${coreStages.length}）`, num: r => r.phonics },
+    { label: `辞書マスター単元（/${categories.length}）`, num: r => r.dictMastered },
+    { label: `辞書モードのクリア（/${categories.length * DICT_SKILLS.length}）`, num: r => r.dictModes },
+    { label: '教科書', num: r => r.textbook, text: r => `${r.textbook}/${r.textbookAll}` },
+    { label: 'ダイアログ', num: r => r.dialogue, text: r => `${r.dialogue}/${r.dialogueAll}` },
+    { label: 'お話づくり（回）', num: r => r.story },
+    { label: 'AI英会話クリア（回）', num: r => r.ai },
+    { label: '発音 最高点', num: r => r.pronBest },
+    { label: '発音 最近10回の平均', num: r => r.pronAvg10 },
+    { label: '発音の回数', num: r => r.pronCount },
+    { label: 'ふりかえり（日数）', num: r => r.reflDays },
+    { label: 'ふりかえり ⭐平均', num: r => r.reflStarsAvg },
+    { label: 'ポイント（これまでの合計）', num: r => r.points },
   ];
+
+  // 学年ごとの平均（値がない子＝発音0回などは 平均に入れない）
+  const avgOf = (g: number | null, c: typeof COLS[number]) => {
+    if (!c.num) return null;
+    const vals = allRows.filter(r => r.grade === g).map(c.num).filter((v): v is number => v !== null);
+    return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
+  };
+  const gradesShown = Array.from(new Set(rows.map(r => r.grade))).filter((g): g is number => g !== null).sort();
+  const avgs = useMemo(() => {
+    const m = new Map<string, number | null>();
+    for (const g of [5, 6]) for (const c of COLS) m.set(`${g}|${c.label}`, avgOf(g, c));
+    return m;
+  }, [allRows, categories.length]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const avg = (g: number | null, c: typeof COLS[number]) => (g === null ? null : avgs.get(`${g}|${c.label}`) ?? null);
+  const show = (r: Row, c: typeof COLS[number]) => (c.text ? c.text(r) : String(c.num?.(r) ?? ''));
+  // 学年平均との比べ：平均の1.2倍以上は ▲、0.8倍以下は ▼（平均が0のときは比べない）
+  const mark = (r: Row, c: typeof COLS[number]) => {
+    const v = c.num?.(r); const a = avg(r.grade, c);
+    if (v === null || v === undefined || !a) return '';
+    return v >= a * 1.2 ? '▲' : v <= a * 0.8 ? '▼' : '';
+  };
 
   const downloadCsv = () => {
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const lines = [COLS.map(c => esc(c.label)).join(',')];
-    for (const r of rows) lines.push(COLS.map(c => esc(c.get(r))).join(','));
+    for (const r of rows) lines.push(COLS.map(c => esc(show(r, c) + mark(r, c))).join(','));
+    for (const g of gradesShown) {
+      lines.push(COLS.map((c, i) => esc(i === 1 ? `${g}年の平均` : c.num ? String(avg(g, c) ?? '') : '')).join(','));
+    }
     const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -142,7 +169,8 @@ export const ProgressTableCard: React.FC<{ students: any[] }> = ({ students }) =
         </div>
         <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 0.5rem' }}>
           期間で絞れるのは「発音」と「ふりかえり」だけ。ほかの列は日時が残っていないので、いつも これまでの合計です。
-          教科書・ダイアログは その子の学年の分で数えています。画面を読み込んだ時点の内容です
+          教科書・ダイアログは その子の学年の分で数えています。画面を読み込んだ時点の内容です。
+          ▲＝同じ学年の平均の1.2倍以上、▼＝0.8倍以下。学年平均はクラスで絞っても その学年の全員で出し、表のいちばん下に出ます（発音0回の子などは平均に入れない）
         </p>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -153,7 +181,19 @@ export const ProgressTableCard: React.FC<{ students: any[] }> = ({ students }) =
             </thead>
             <tbody>
               {rows.map(r => (
-                <tr key={r.id}>{COLS.map(c => <td key={c.label} style={cell}>{c.get(r)}</td>)}</tr>
+                <tr key={r.id}>{COLS.map(c => {
+                  const m = mark(r, c);
+                  return (
+                    <td key={c.label} style={{ ...cell, background: m === '▲' ? '#ecfdf5' : m === '▼' ? '#fef2f2' : undefined }}>
+                      {show(r, c)} {m && <span style={{ color: m === '▲' ? '#047857' : '#b91c1c', fontSize: '0.75rem' }}>{m}</span>}
+                    </td>
+                  );
+                })}</tr>
+              ))}
+              {gradesShown.map(g => (
+                <tr key={`avg-${g}`} style={{ background: '#f1f5f9', fontWeight: 'bold' }}>
+                  {COLS.map((c, i) => <td key={c.label} style={cell}>{i === 1 ? `${g}年の平均` : c.num ? (avg(g, c) ?? '') : ''}</td>)}
+                </tr>
               ))}
             </tbody>
           </table>
