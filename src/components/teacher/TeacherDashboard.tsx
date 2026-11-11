@@ -1,5 +1,6 @@
 import { ReflectionTableCard } from './ReflectionTableCard';
 import { CertificateCard } from './CertificateCard';
+import { ProgressTableCard } from './ProgressTableCard';
 import { SpendPinCard } from './SpendPinCard';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -1057,6 +1058,7 @@ export const TeacherDashboard: React.FC = () => {
       </div>
 
       <ReflectionTableCard students={students} />
+      <ProgressTableCard students={students} />
       <CertificateCard students={students} />
 
       <div className="glass-card" style={{ marginTop: '2rem' }}>
