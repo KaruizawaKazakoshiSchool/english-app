@@ -5,7 +5,6 @@ import { supabase } from './supabase';
 // （＝子ども側のuseAppSettingsには乗らない＝毎回ダウンロードされない）。先生ダッシュボードだけが読む。
 
 const LOGS_ID = 'conversation_logs_v1';
-const MAX_LOGS = 200; // 端末・通信に優しいよう上限。古いものから消える。
 
 export interface ConversationLog {
   id: string;
@@ -19,21 +18,12 @@ export interface ConversationLog {
   lines: { role: string; text: string; speaker?: string }[]; // 会話本文（AI/自分・チーム時は話者名）
 }
 
-// 1件追記（最新が先頭、上限超過は古いものを切り捨て）
+// 1件追記（最新が先頭、200件まで）。DB関数 append_conversation_log が書く
+// （Googleで入った子は students 行を直接書けないため。2026-11-13）
 export const saveConversationLog = async (log: ConversationLog): Promise<{ error: any }> => {
   if (!supabase) return { error: new Error('no supabase') };
-  const { data } = await supabase
-    .from('students')
-    .select('dictionary_progress')
-    .eq('id', LOGS_ID)
-    .single();
-  const dp = data?.dictionary_progress || {};
-  const logs: ConversationLog[] = Array.isArray(dp.logs) ? dp.logs : [];
-  const next = [log, ...logs].slice(0, MAX_LOGS);
-  const { error } = await supabase
-    .from('students')
-    .upsert({ id: LOGS_ID, name: 'Conversation Logs', dictionary_progress: { ...dp, logs: next } }, { onConflict: 'id' });
-  return { error };
+  const { data, error } = await supabase.rpc('append_conversation_log', { p_log: log });
+  return { error: error || (data === true ? null : new Error('not saved')) };
 };
 
 // 先生ダッシュボード用：全ログ取得（最新順）

@@ -11,14 +11,9 @@ import { supabase } from './supabase';
 export const urlWantsGoogle = () =>
   /[?&]google=1\b/.test(window.location.search) || /[?&]google=1\b/.test(window.location.hash);
 
-// 1度 ?google=1 で開いた端末は、Googleから失敗して戻ってきたときもボタンを出す（段階②の試験用）
-export const showGoogleButton = () => {
-  const want = urlWantsGoogle();
-  try {
-    if (want) localStorage.setItem('googleTrial', '1');
-    return want || localStorage.getItem('googleTrial') === '1';
-  } catch { return want; }
-};
+// 合言葉の入口（先生の非常口）は ?aikotoba=1 のときだけ出す（2026-11-13〜。子どもの入口は Google だけ）
+export const urlWantsAikotoba = () =>
+  /[?&]aikotoba=1\b/.test(window.location.search) || /[?&]aikotoba=1\b/.test(window.location.hash);
 
 export const isGoogleEmail = (email?: string | null) => !!email && !email.endsWith('@kazakoshi.app');
 

@@ -66,7 +66,8 @@ export const useVocabulary = (): Vocabulary[] => {
   return cache;
 };
 
-// マイ単語を1件追加する（設定行の customVocab に追記。既存のAPIキー等はそのまま保持）
+// マイ単語を1件追加する（設定行の customVocab に追記）。DB関数 add_custom_vocab が書く
+// （Googleで入った子は設定行を直接書けないため。2026-11-13）
 export const addCustomWord = async (w: {
   english: string;
   japanese: string;
@@ -75,23 +76,12 @@ export const addCustomWord = async (w: {
   imageUrl?: string;
 }): Promise<{ error: any }> => {
   if (!supabase) return { error: new Error('no supabase') };
-  const { data } = await supabase
-    .from('students')
-    .select('dictionary_progress')
-    .eq('id', SETTINGS_ID)
-    .single();
-  const dp = data?.dictionary_progress || {};
-  const list = dp.customVocab || [];
-  const entry = {
-    id: `custom_${Date.now()}`,
-    english: w.english.trim(),
-    japanese: w.japanese.trim(),
-    category: w.category.trim() || 'マイ単語',
-    emoji: (w.emoji || '✏️').trim() || '✏️',
-    ...(w.imageUrl && w.imageUrl.trim() ? { imageUrl: w.imageUrl.trim() } : {}),
-  };
-  const { error } = await supabase
-    .from('students')
-    .upsert({ id: SETTINGS_ID, name: 'System Settings', dictionary_progress: { ...dp, customVocab: [...list, entry] } }, { onConflict: 'id' });
-  return { error };
+  const { data, error } = await supabase.rpc('add_custom_vocab', {
+    p_english: w.english,
+    p_japanese: w.japanese,
+    p_category: w.category,
+    p_emoji: w.emoji || '',
+    p_image_url: w.imageUrl || null,
+  });
+  return { error: error || (data === true ? null : new Error('not saved')) };
 };

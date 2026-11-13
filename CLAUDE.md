@@ -45,9 +45,11 @@ Supabaseをデータベースとして使用。GitHub Pagesにデプロイ済み
   - OAuthクライアントは学園のGoogle Cloud（project eigo-no-mori）。IDとシークレットはSupabaseの管理画面にだけ入れる（コード・チャットに書かない）
   - 名簿 `students.email` に学園メール（さんだーが管理画面で入れる）。DB関数 `my_student_id()`/`my_student()`、ポリシー `google_read`（学園ドメインは読める）`google_update_own`/`google_insert_own`（自分の行だけ書ける）
   - `auth.users` のトリガー `guard_signup_domain`：kazakoshi.ed.jp / kazakoshi.jp / kazakoshi.app 以外はアカウントを作らせない
-  - アプリは URL に `?google=1` のときだけ「学園のGoogleで入る」を出す。入ったら名前選びなしで自分の記録へ（Login.tsx）
+  - **2026-11-13〜 子どもの入口は Google だけ**（ClassGate）。合言葉の欄は `?aikotoba=1` のときだけ出る（先生の非常口。クラス共用アカウント自体は残してある＝段階③で止める）。入ったら名前選びなしで自分の記録へ（Login.tsx）
+  - **先生の学園アカウント**は `staff_members` テーブル（アプリからは読めない）。DB関数 `is_staff()`、ポリシー `staff_update`/`staff_insert`（全行を書ける）・`bg_staff_all`（背景写真）。**他の先生を足すときは管理画面で staff_members に1行（学園メール）足すだけ**
+  - Googleで入った子が共有の行に書くものは DB関数経由：`append_conversation_log`（AI英会話の記録）・`add_custom_vocab`（マイ単語）。背景写真は `bg_google_own_*`（自分の `番号.jpg` だけ）
   - 入口の整理は `src/lib/googleEntry.ts`：?google=1 で開くと端末の合言葉の入室・前の人の番号を消す／「おわる」はGoogleの入室も消す。signOut は必ず `scope: 'local'`（既定の global だと共用アカウントの全端末が出される）
-  - 段階③の前に直す：名前一覧を出さない／マイ単語（設定行への書きこみ）／スタッフの先生画面
+  - 段階③の前に直す：名前一覧を出さない（スタッフ以外）／合言葉で入ったままの端末を出す／クラス共用アカウントを止める。保護者のおためし（99）は廃止でOK（2026-11-13 さんだー）
 - `.env` には Supabase のURLと公開用の anon キーだけ（`.gitignore` 済み）
 
 ## セキュリティの約束

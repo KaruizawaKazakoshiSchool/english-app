@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { showGoogleButton } from '../../lib/googleEntry';
+import { urlWantsAikotoba } from '../../lib/googleEntry';
 
-// クラス共通の「合言葉」入力画面。
-// この端末で初めて開いたときだけ表示され、正しい合言葉を入れると
-// Supabaseのログイン状態が端末に保存される（以後この画面はスキップ）。
+// 入口の画面。ふだんは「学園のGoogleで入る」だけを出す（2026-11-13〜。合言葉は子どもの入口から外した）。
+// クラス共通の「合言葉」は、URLに ?aikotoba=1 を付けたときだけ出す（先生の非常口。アカウント自体は残してある）。
 //
 // ★重要：合言葉（＝Supabaseアカウントのパスワード）はこのコードには書かない。
 //   子どもが画面で入力する。ここに書いてよいのは「メールアドレス」だけ（秘密ではない）。
@@ -15,8 +14,7 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // 学園のGoogleで入る（段階②・試験中）。URLに ?google=1 を付けたときだけ出す（旧URLの案内ページ・お知らせの紙はこのURL）
-  const showGoogle = showGoogleButton();
+  const showAikotoba = urlWantsAikotoba();
   const handleGoogle = async () => {
     setBusy(true);
     setError('');
@@ -63,12 +61,33 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
       style={{ minHeight: '100vh', padding: '2rem', textAlign: 'center' }}
     >
       <div className="flex-col flex-center gap-sm">
-        <div style={{ fontSize: '3rem' }}>🔑</div>
+        <div style={{ fontSize: '3rem' }}>🌳</div>
+        <h1 className="text-primary" style={{ fontSize: '2.4rem', margin: 0 }}>
+          Eigo no Mori
+        </h1>
+        <p style={{ fontSize: '1.05rem', color: '#555', margin: 0 }}>
+          学園の Googleアカウントで 入ってね
+        </p>
+      </div>
+
+      <button onClick={handleGoogle} disabled={busy} className="btn"
+        style={{ padding: '0.9rem 2rem', fontSize: '1.25rem', background: 'white', color: '#1a73e8', border: '2px solid #1a73e8', borderRadius: '999px', fontWeight: 'bold', cursor: busy ? 'wait' : 'pointer' }}>
+        🔵 学園のGoogleで 入る
+      </button>
+      {error && !showAikotoba && (
+        <div style={{ color: 'var(--color-error)', fontWeight: 'bold', fontSize: '1rem' }}>
+          {error}
+        </div>
+      )}
+
+      {showAikotoba && (<>
+      <div className="flex-col flex-center gap-sm" style={{ marginTop: '1.5rem' }}>
+        <div style={{ fontSize: '2rem' }}>🔑</div>
         <h1 className="text-primary" style={{ fontSize: '2.4rem', margin: 0 }}>
           合言葉 を いれてね
         </h1>
         <p style={{ fontSize: '1.05rem', color: '#555', margin: 0 }}>
-          この タブレット（パソコン）で さいしょの 1かい だけ
+          先生用
         </p>
       </div>
 
@@ -144,13 +163,8 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
           {busy ? '確認中…' : '始める'}
         </button>
       </form>
+      </>)}
 
-      {showGoogle && (
-        <button onClick={handleGoogle} disabled={busy} className="btn"
-          style={{ padding: '0.7rem 1.6rem', fontSize: '1.1rem', background: 'white', color: '#1a73e8', border: '2px solid #1a73e8', borderRadius: '999px', fontWeight: 'bold', cursor: 'pointer' }}>
-          🔵 学園のGoogleで 入る
-        </button>
-      )}
     </div>
   );
 };

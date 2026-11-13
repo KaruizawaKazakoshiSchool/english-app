@@ -24,6 +24,8 @@ export const Login: React.FC = () => {
       const { data } = await supabase.rpc('my_student');
       const me = Array.isArray(data) ? data[0] : null;
       if (me?.id) { doLogin(me.id, me.name); return; }
+      const { data: staff } = await supabase.rpc('is_staff');
+      if (staff === true) { setGoogleMsg('先生の アカウントで 入っています。スタッフ用の画面は 下のボタンから'); return; }
       setGoogleMsg('この 学園アカウントは、まだ 名簿に つながっていないよ。先生に 伝えてね');
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
