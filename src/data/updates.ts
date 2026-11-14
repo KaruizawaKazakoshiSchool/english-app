@@ -14,6 +14,10 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-11-14', text: '🤖 AI英会話「6年 U6 環境」で、クリアのために何を言えばいいか 分かるようにしたよ', fromVoice: true },
+  { date: '2026-11-14', text: '🌳 みんなの木に「あなたが これまでに 入れたP」が 出るようになったよ', fromVoice: true },
+  { date: '2026-11-14', text: '🍁 「もみじテーマ」の名前を「もみじグラデ」に変えたよ（もう買った人は そのまま使えるよ）', fromVoice: true },
+  { date: '2026-11-14', text: '🎧 辞書の「聞く」で、全部聞いたのに 終わらないことがあったのを直したよ', fromVoice: true },
   { date: '2026-11-13', text: '🔵 入口は「学園のGoogleで入る」だけになったよ。Googleで入っても、マイ単語・背景の写真・AI英会話の記録が ちゃんと残るように直したよ' },
   { date: '2026-11-09', text: '🐾 辞書に「生き物の問題＋」（habitat loss・alien species・natural disasters など16こ）が ふえたよ。動物が減っている理由を 英語で言ってみよう' },
   { date: '2026-11-06', text: '🧴 辞書の「のり（glue）」の絵が ばんそうこうになっていたのを直したよ', fromVoice: true },

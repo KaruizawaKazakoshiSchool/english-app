@@ -26,7 +26,7 @@ const forestStage = (total: number) =>
 
 export const ClassTree: React.FC = () => {
   const navigate = useNavigate();
-  const { balance, donate } = useShop();
+  const { shop, balance, donate } = useShop();
   const { treeMode } = useAppSettings();
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [myTeam, setMyTeam] = useState<string | null>(null);
@@ -241,6 +241,10 @@ export const ClassTree: React.FC = () => {
           <div style={{ textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
             全部 合わせて <b style={{ color: 'var(--color-success)' }}>{totalAll.toLocaleString()}P</b>
             {todayGain > 0 && <span style={{ marginLeft: '0.8rem', color: 'var(--color-primary)' }}>きょう あなたは +{todayGain}P</span>}
+          </div>
+          {/* 自分がこれまでに入れた合計（子どもの声 2026-11-13） */}
+          <div style={{ textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
+            あなたが これまでに 入れたのは <b style={{ color: 'var(--color-primary)' }}>{(shop.donated || 0).toLocaleString()}P</b>
           </div>
 
           {/* 入れる：町ひらき前は森、後は建物3択 */}

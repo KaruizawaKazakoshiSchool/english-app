@@ -27,7 +27,7 @@ export const FeedbackButton: React.FC = () => {
       student_name: localStorage.getItem('studentName') || 'ゲスト',
       kind,
       message: msg.slice(0, 1000),
-      screen: (window.location.hash || '').slice(0, 80),
+      screen: (() => { const h = window.location.hash || ''; try { return decodeURI(h).slice(0, 80); } catch { return h.slice(0, 80); } })(),
       ua: navigator.userAgent.slice(0, 120),
     });
     setSending(false);

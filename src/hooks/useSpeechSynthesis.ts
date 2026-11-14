@@ -17,6 +17,10 @@ const digraphMap: Record<string, string> = {
   'oa': 'oh'
 };
 
+// 読み上げ中の1つを持っておく（上の onend 対策）
+let liveUtterance: SpeechSynthesisUtterance | null = null;
+export const _keepUtterance = () => liveUtterance;
+
 export const useSpeechSynthesis = () => {
   // onEnd: 読み上げ/再生が「最後まで」終わったときに呼ばれる。
   // 途中で次の音にキャンセルされた場合も end が発火しうるので、呼び出し側で
@@ -62,6 +66,9 @@ export const useSpeechSynthesis = () => {
       if (voice && !voice.localService && !retry) setTimeout(fallback, 1500);
 
       if (onEnd) utterance.onend = onEnd;
+      // Chrome は読み上げ中の utterance を捨ててしまうと onend が来ないことがある
+      // （「全部聞いたのに終わらない」2026-11-14）。終わるまで持っておく
+      liveUtterance = utterance;
       synth.speak(utterance);
     };
     // Chrome は cancel() の直後に speak() すると、最初の音が出ないことがある（「はじめ聞こえない」）
