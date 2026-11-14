@@ -284,6 +284,32 @@ export const Home: React.FC = () => {
 
           <div
             className="glass-card flex-col flex-center animate-pop hover-scale"
+            style={{ padding: '2rem', cursor: 'pointer', background: 'rgba(0, 184, 148, 0.15)', border: '2px solid #00b894' }}
+            onClick={() => navigate('/puzzle')}
+          >
+            <span style={{ fontSize: '40px', marginBottom: '0.5rem' }}>🧩</span>
+            <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#000' }}>ことばパズル</h2>
+            <p style={{ margin: '0.5rem 0 0.8rem 0', color: '#666', textAlign: 'center' }}>カードをならべて<br/>文をつくろう！</p>
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <button
+                className="hover-scale"
+                onClick={(e) => { e.stopPropagation(); navigate('/puzzle?grade=5'); }}
+                style={{ fontSize: '1rem', fontWeight: 'bold', background: '#00b894', color: '#fff', border: 'none', padding: '0.5rem 1.1rem', borderRadius: '999px', cursor: 'pointer' }}
+              >
+                5年生
+              </button>
+              <button
+                className="hover-scale"
+                onClick={(e) => { e.stopPropagation(); navigate('/puzzle?grade=6'); }}
+                style={{ fontSize: '1rem', fontWeight: 'bold', background: '#00b894', color: '#fff', border: 'none', padding: '0.5rem 1.1rem', borderRadius: '999px', cursor: 'pointer' }}
+              >
+                6年生
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="glass-card flex-col flex-center animate-pop hover-scale"
             style={{ padding: '2rem', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(217, 70, 239, 0.2) 100%)', border: '2px solid #d946ef' }}
             onClick={() => navigate('/story')}
           >

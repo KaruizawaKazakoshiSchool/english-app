@@ -30,6 +30,7 @@ import { ReflectionHistory } from './components/reflection/ReflectionHistory';
 import { TextbookMode } from './components/textbook/TextbookMode';
 import { MyProgress } from './components/progress/MyProgress';
 import { DialogueTrainer } from './components/dialogue/DialogueTrainer';
+import { WordPuzzle } from './components/puzzle/WordPuzzle';
 import { MicTest } from './components/mic/MicTest';
 import { Shop } from './components/shop/Shop';
 import { ClassTree } from './components/tree/ClassTree';
@@ -114,6 +115,7 @@ const App: React.FC = () => {
             <Route path="/tree" element={<ClassTree />} />
             <Route path="/skilltest" element={<SkillTest />} />
             <Route path="/dialogue" element={<DialogueTrainer />} />
+            <Route path="/puzzle" element={<WordPuzzle />} />
 
             <Route path="/reflection" element={<ReflectionForm />} />
             <Route path="/reflection/history" element={<ReflectionHistory />} />
