@@ -7,6 +7,7 @@ import { useVocabulary } from '../../hooks/useVocabulary';
 import { stages } from '../../data/stages';
 import { DEFAULT_QUIZZES } from '../textbook/textbookQuizData';
 import { DIALOGUES } from '../dialogue/dialogueData';
+import { PUZZLE_UNITS } from '../puzzle/puzzleData';
 import { isArchived } from '../../data/archivedUnits';
 import { useDictionaryProgress, type DictCategoryProgress } from '../../hooks/useDictionaryProgress';
 import { usePronunciationHistory, type ScoreMode } from '../../hooks/usePronunciationHistory';
@@ -109,6 +110,13 @@ export const MyProgress: React.FC = () => {
   const dialogueList = DIALOGUES.filter(d => !isArchived(d.id) && forMe(d.grade));
   const dialogueDone = dialogueList.filter(d => (clearCounts[`dialogue_${d.id}`] || 0) > 0).length;
   const dialoguePct = dialogueList.length > 0 ? Math.round((dialogueDone / dialogueList.length) * 100) : 0;
+  // ことばパズル（子どもの声 2026-11-15「自分の記録に言葉パズルの記録も」）。
+  //   「ふつう」をクリアした単元を数える（やさしいだけの単元は半分として数える）
+  const puzzleList = PUZZLE_UNITS.filter(u => forMe(u.grade));
+  const puzzleClear = (id: string, lv: string) => (clearCounts[`puzzle_${id}_${lv}`] || 0) > 0;
+  const puzzleDone = puzzleList.filter(u => puzzleClear(u.id, 'normal')).length;
+  const puzzleHalf = puzzleList.filter(u => !puzzleClear(u.id, 'normal') && puzzleClear(u.id, 'easy')).length;
+  const puzzlePct = puzzleList.length > 0 ? Math.round(((puzzleDone + puzzleHalf / 2) / puzzleList.length) * 100) : 0;
   const storyCount = (clearCounts['story_mode'] || 0) + (clearCounts['story_mode_reading'] || 0);
   const aiClearCount = Object.entries(clearCounts).filter(([k]) => k.startsWith('ai_clear_')).reduce((n, [, v]) => n + (v || 0), 0);
 
@@ -144,12 +152,14 @@ export const MyProgress: React.FC = () => {
     }
     const d = dialogueList.find(x => !(clearCounts[`dialogue_${x.id}`] > 0));
     if (d) recs.push({ key: `dlg-${d.id}`, label: `🗣️ ダイアログ ${d.unitName}`, to: `/dialogue?grade=${d.grade}&id=${d.id}` });
+    const pz = puzzleList.find(x => !puzzleClear(x.id, 'normal'));
+    if (pz) recs.push({ key: `pz-${pz.id}`, label: `🧩 ことばパズル ${pz.unitName}`, to: `/puzzle?grade=${pz.grade}&id=${pz.id}` });
     const q = textbookList.find(x => !(clearCounts[`textbook_quiz_${x.id}`] > 0));
     if (q) recs.push({ key: `tb-${q.id}`, label: `📖 教科書 ${q.unitName}`, to: `/textbook?grade=${q.grade}&id=${q.id}` });
     const st = coreStages.find(x => !badges.includes(x.id));
     if (st) recs.push({ key: `ph-${st.id}`, label: `🔤 フォニックス ${st.title}`, to: `/stage/${st.id}` });
     return recs;
-  }, [catStats, dialogueList, textbookList, clearCounts, coreStages, badges]);
+  }, [catStats, dialogueList, textbookList, clearCounts, coreStages, badges, puzzleList]);
 
   const colorFor = (done: number) => {
     if (done === SKILLS.length) return { bg: 'rgba(0, 184, 148, 0.15)', border: '#00b894', label: 'マスター！', labelColor: '#00b894' };
@@ -172,6 +182,7 @@ export const MyProgress: React.FC = () => {
         <Ring pct={dictPct} color="#48dbfb" emoji="📚" label="Picture Dictionary" sub={`${masteredCount}/${categories.length} 単元`} onClick={() => navigate('/home?tab=dictionary')} />
         <Ring pct={textbookPct} color="#00b894" emoji="📖" label="教科書モード" sub={`${textbookDone}/${textbookList.length} Unit`} onClick={() => navigate(myGrade ? `/textbook?grade=${myGrade}` : '/textbook')} />
         <Ring pct={dialoguePct} color="#0984e3" emoji="🗣️" label="ダイアログ" sub={`${dialogueDone}/${dialogueList.length} 会話`} onClick={() => navigate(myGrade ? `/dialogue?grade=${myGrade}` : '/dialogue')} />
+        <Ring pct={puzzlePct} color="#e17055" emoji="🧩" label="ことばパズル" sub={`${puzzleDone}/${puzzleList.length} Unit`} onClick={() => navigate(myGrade ? `/puzzle?grade=${myGrade}` : '/puzzle')} />
       </div>
 
       {/* お話づくり・AI英会話（回数で見せる） */}
