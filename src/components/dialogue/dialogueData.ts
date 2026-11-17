@@ -314,9 +314,12 @@ export const DIALOGUES: Dialogue[] = [
   {
     id: 'g6-u6', grade: 6, unitName: 'Unit 6: Save the animals.', targetPhrase: 'What do sea turtles eat?',
     lines: [
+      // 2026-11-17 さんだー：P8 Animal Planet の発表の5行（冊子 p.2 ⑤）と同じにする。3人チームで1・2行目／3行目／4・5行目を分担
       { speaker: 'A', en: '{Sea turtles} are in danger.', ja: '【ウミガメ】が危ない。' },
       { speaker: 'B', en: 'They live in {the sea}.', ja: '【海】に住んでいる。' },
-      { speaker: 'A', en: 'We must reduce {plastic bags}.', ja: '【レジ袋】を減らさなきゃ。' },
+      { speaker: 'A', en: '{Plastic} is a big problem.', ja: '【プラスチック】が大きな問題。' },
+      { speaker: 'B', en: 'We can {use eco-friendly bags}.', ja: 'わたしたちは【エコバッグを使う】ことができる。' },
+      { speaker: 'A', en: "Let's save {the sea turtles}!", ja: '【ウミガメ】を守ろう！' },
     ],
     relatedCategories: ['海の生き物', '生き物の問題・できること', '生き物の問題＋（プラスアルファ）'],
   },
