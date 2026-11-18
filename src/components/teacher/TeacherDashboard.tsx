@@ -1,4 +1,5 @@
 import { ReflectionTableCard } from './ReflectionTableCard';
+import { ShiningReflectionsCard } from './ShiningReflectionsCard';
 import { CertificateCard } from './CertificateCard';
 import { ProgressTableCard } from './ProgressTableCard';
 import { SpendPinCard } from './SpendPinCard';
@@ -1058,6 +1059,7 @@ export const TeacherDashboard: React.FC = () => {
       </div>
 
       <ReflectionTableCard students={students} />
+      <ShiningReflectionsCard students={students} />
       <ProgressTableCard students={students} />
       <CertificateCard students={students} />
 
