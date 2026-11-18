@@ -112,5 +112,5 @@ export const useAppSettings = () => {
   }, [endsAt]);
   const lockMode = endsAt && now >= endsAt ? 'none' : rawLockMode;
 
-  return { azureDisabled, lockMode, todayMissions, geminiDailyCap, azureDailyCap, customVocabEnabled, freetalkGoals, treeMode, spendMode, salePercent, saleLabel, currentUnit, settingsLoaded };
+  return { azureDisabled, lockMode, lockSetAt, todayMissions, geminiDailyCap, azureDailyCap, customVocabEnabled, freetalkGoals, treeMode, spendMode, salePercent, saleLabel, currentUnit, settingsLoaded };
 };

@@ -15,7 +15,7 @@ import { SpendGate } from '../ui/SpendGate';
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
   const { totalPoints } = usePoints();
-  const { lockMode, todayMissions } = useAppSettings();
+  const { lockMode, lockSetAt, todayMissions } = useAppSettings();
   const { shop, balance } = useShop();
 
   // Basic mock auth check (to be replaced with real context later)
@@ -81,7 +81,7 @@ export const Layout: React.FC = () => {
   return (
     <div className="app-container">
       <SpendGate />
-      <GlobalLockScreen mode={lockMode} missions={todayMissions} />
+      <GlobalLockScreen mode={lockMode} lockSetAt={lockSetAt} missions={todayMissions} />
       {studentId && (
         <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

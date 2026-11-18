@@ -10,12 +10,25 @@ import { LockActiveMarker } from '../../lib/lockPause';
 
 export type LockMode = 'none' | 'screen' | 'reflection' | 'missions';
 
+// ふりかえりロックの「1分まって」（2026-11-19 さんだー）。
+// ロックがかかったとき、学習の画面（トップ以外）にいた子は、その画面のまま1分だけ続けられる（上に残り時間の帯）。
+// トップにいた子・ほかの画面へ動いた子・1分たった子は、すぐロック画面。
+// 再読みこみで1分がふえないよう、ロックをかけた時刻（lockSetAt）ごとに sessionStorage に覚える。
+export const REFLECTION_GRACE_MS = 60 * 1000;
+const GRACE_KEY = 'reflectionGrace';
+type Grace = { key: string; path: string; until: number };
+const readGrace = (key: string): Grace | null => {
+  try { const g = JSON.parse(sessionStorage.getItem(GRACE_KEY) || 'null'); return g && g.key === key ? g : null; } catch { return null; }
+};
+const writeGrace = (g: Grace) => { try { sessionStorage.setItem(GRACE_KEY, JSON.stringify(g)); } catch { /* 保存できなくても動く */ } };
+
+
 // 全員の画面にかぶせるロック。
 //   screen     … 何もできない（スタッフの話を聞く）
 //   reflection … ふりかえりを書く画面と、ショップ・みんなの木だけ使える（2026-10-23〜）。ほかの画面ではこのロックが出て、ボタンで ふりかえりへ
 //   missions   … 今日のミッションの画面（とトップ・ふりかえり）だけ使える。ミッションごとの「開くとき」は lib/missionGate
 //                （🏁 さいご＝ほかを全部クリアしたら開き、クリアでその日ロックなし／✍️ サインのあと＝合言葉で30分ロックなし）
-export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMission[] }> = ({ mode, missions = [] }) => {
+export const GlobalLockScreen: React.FC<{ mode: LockMode; lockSetAt?: number | null; missions?: TodayMission[] }> = ({ mode, lockSetAt = null, missions = [] }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [pin, setPin] = useState(''); const [pinMsg, setPinMsg] = useState(''); const [, force] = useState(0);
@@ -25,6 +38,33 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMissio
     const t = setInterval(() => force(x => x + 1), 20000);
     return () => clearInterval(t);
   }, [mode]);
+
+  // ── ふりかえりロックの1分まって
+  const here = location.pathname + location.search;
+  const isLearningPage = !['/', '/home'].includes(location.pathname)
+    && !location.pathname.startsWith('/reflection') && !location.pathname.startsWith('/shop') && !location.pathname.startsWith('/tree');
+  const graceKey = String(lockSetAt ?? 'unknown');
+  let grace = mode === 'reflection' ? readGrace(graceKey) : null;
+  if (mode === 'reflection' && !grace) {
+    // このロックで初めて見たとき：学習の画面にいれば1分、そうでなければ0
+    grace = { key: graceKey, path: here, until: isLearningPage ? Date.now() + REFLECTION_GRACE_MS : 0 };
+    writeGrace(grace);
+  }
+  const graceLeft = grace && grace.path === here ? grace.until - Date.now() : 0;
+  const inGrace = mode === 'reflection' && graceLeft > 0 && localStorage.getItem('studentId') !== STAFF_TEST_ID;
+  useEffect(() => {
+    if (!inGrace) return;
+    const t = setInterval(() => force(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [inGrace]);
+  if (inGrace) {
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999, background: 'var(--color-accent)', color: '#222',
+        padding: '0.6rem 1rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.15rem', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+        ✏️ あと {Math.ceil(graceLeft / 1000)} 秒で ふりかえりの時間。今やっていることを 終わらせよう
+      </div>
+    );
+  }
 
   // Test（00）はロック対象外（ロック中にスタッフがデモを見せられるように）。
   // TestのログインにはPINが必要なので、子どもがここを抜け道にはできない。
@@ -41,7 +81,6 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; missions?: TodayMissio
   if (mode === 'missions') {
     if (onReflection || location.pathname === '/home' || location.pathname === '/') return null;
     if (isSignUnlocked() || finishedToday(missions)) return null;
-    const here = location.pathname + location.search;
     const hit = missions.find(m => m.route && isOnMission(here, m.route));
     if (hit && isMissionOpen(hit, missions)) return null;
     if (hit) blocked = hit;
