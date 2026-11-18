@@ -259,8 +259,11 @@ export const DIALOGUES: Dialogue[] = [
       { speaker: 'B', en: 'My hero is my {mother}.', ja: '【お母さん】だよ。' },
       { speaker: 'A', en: 'Why?', ja: 'どうして？' },
       { speaker: 'B', en: '{She} is {kind}.', ja: '【やさしい】から。' },
+      // 2026-11-19 さんだー：3学期 P9 My Hero Show のヒーローカード（性格・できること）とそろえる
+      { speaker: 'A', en: 'What can {she} do?', ja: '【彼女】は何ができるの？' },
+      { speaker: 'B', en: '{She} can {cook} well.', ja: '【料理】が上手。' },
     ],
-    relatedCategories: ['人', '性格'],
+    relatedCategories: ['人', '性格', '家族'],
   },
 
   // ===== 6年生 =====
