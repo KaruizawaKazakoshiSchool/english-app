@@ -40,6 +40,8 @@ export const useAppSettings = () => {
   const [saleLabel, setSaleLabel] = useState<string>('');
   // 今の単元（トップにまとめて出すモード一覧）。先生が設定行の currentUnit に書く
   const [currentUnit, setCurrentUnit] = useState<CurrentUnit | null>(null);
+  // 先生の設定を一度読み終えたか（AI英会話のミッション直行で、先生の第一声を待つため）
+  const [settingsLoaded, setSettingsLoaded] = useState<boolean>(!supabase);
 
   useEffect(() => {
     if (!supabase) return;
@@ -77,8 +79,9 @@ export const useAppSettings = () => {
       if (data && data.dictionary_progress) {
         applySettings(data.dictionary_progress);
       }
+      setSettingsLoaded(true);
     };
-    fetchSettings();
+    fetchSettings().catch(() => setSettingsLoaded(true));
 
     // Listen to real-time changes
     const channelId = `global_controls_${Math.random().toString(36).substring(7)}`;
@@ -109,5 +112,5 @@ export const useAppSettings = () => {
   }, [endsAt]);
   const lockMode = endsAt && now >= endsAt ? 'none' : rawLockMode;
 
-  return { azureDisabled, lockMode, todayMissions, geminiDailyCap, azureDailyCap, customVocabEnabled, freetalkGoals, treeMode, spendMode, salePercent, saleLabel, currentUnit };
+  return { azureDisabled, lockMode, todayMissions, geminiDailyCap, azureDailyCap, customVocabEnabled, freetalkGoals, treeMode, spendMode, salePercent, saleLabel, currentUnit, settingsLoaded };
 };

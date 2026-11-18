@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAppSettings } from '../../../hooks/useAppSettings';
 import { saveConversationLog } from '../../../lib/conversationLogs';
 import { STUDENTS } from '../../../data/students';
@@ -231,7 +231,7 @@ const parseReply = (raw: string): { en: string; ja: string; cleared: boolean; bo
 export const AIAssistant: React.FC = () => {
   const goBack = useSafeBack();
   const routerLoc = useLocation();
-  const { freetalkGoals } = useAppSettings();
+  const { freetalkGoals, settingsLoaded } = useAppSettings();
   const studentName = localStorage.getItem('studentName') || 'ゲスト';
   const { speak } = useSpeechSynthesis();
   const { transcript, isRecording, startListening, stopListening, setTranscript } = useSpeechRecognition();
@@ -544,8 +544,17 @@ export const AIAssistant: React.FC = () => {
   // APIキーの読み込みを待ってから一度だけ自動開始する（キー未取得だとinitChatが空振りするため）。
   const [searchParams] = useSearchParams();
   const autoStartedRef = useRef(false);
+  // ミッション等から ?unit= / ?shop= で直接入ったときの「もどる」は、AI英会話の一覧ではなく元いた画面へ
+  const navigate = useNavigate();
+  const leaveDirect = () => {
+    if (routerLoc.key !== 'default') navigate(-1);
+    else navigate('/home');
+  };
   useEffect(() => {
     if (autoStartedRef.current) return;
+    // 先生の設定（Unitごとの第一声・ゴール）を読み終えてから始める。先に始めると既定の第一声になり、
+    // 「AI英会話から入ったとき」と中身が食い違う（2026-11-19 6年U6：ミッションだけ Dr. Terra にならなかった）
+    if (!settingsLoaded) return;
     // ?shop=simple / ?shop=challenge でお店屋さんモードを直接ひらく（今日のミッション用）
     const shop = searchParams.get('shop');
     if (shop === 'simple' || shop === 'challenge') {
@@ -561,7 +570,7 @@ export const AIAssistant: React.FC = () => {
     autoStartedRef.current = true;
     initChat('freetalk', withGoalOverride(buildUnitOpts(u), u.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, settingsLoaded]);
 
 
   // 状況設定（フリートーク）
@@ -715,7 +724,7 @@ export const AIAssistant: React.FC = () => {
   return (
     <div className="flex-col" style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <Button variant="outline" onClick={() => { if (isHubEntry(routerLoc.pathname, routerLoc.search)) { goBack(); return; } setMode(null); setMessages([]); setPendingFreetalk(true); }} icon={ArrowLeft}>もどる</Button>
+        <Button variant="outline" onClick={() => { if (isHubEntry(routerLoc.pathname, routerLoc.search)) { goBack(); return; } if (autoStartedRef.current) { leaveDirect(); return; } setMode(null); setMessages([]); setPendingFreetalk(true); }} icon={ArrowLeft}>もどる</Button>
         <h2 className="text-primary" style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '1.3rem' }}>{scenario.emoji} {scenario.title}</h2>
         <Button variant="outline" onClick={() => setShowTranslation(t => !t)} style={{ fontSize: '0.85rem', padding: '0.4rem 0.7rem' }} icon={Languages}>
           {showTranslation ? '訳オフ' : '訳オン'}
