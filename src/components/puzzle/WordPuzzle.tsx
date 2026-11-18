@@ -17,7 +17,11 @@ import { PUZZLE_UNITS, toCards, type PuzzleSentence, type PuzzleUnit } from './p
 //     今日3つ目の新しい単元は ×0.75、4つ目からは ×0.5（辞書の dictDepth と同じ考え）
 // AIは使わない。判定は全部この端末の中。
 
-type Level = 'easy' | 'normal';
+type Level = 'easy' | 'normal' | 'hard';
+const LEVEL_JA: Record<Level, string> = { easy: 'やさしい', normal: 'ふつう', hard: 'むずかしい' };
+const LEVEL_MUL: Record<Level, number> = { easy: 0.5, normal: 1, hard: 1.5 };
+// 「むずかしい」で足す よけいなカードの候補（文にもう入っている語は使わない）
+const DECOYS = ['a', 'the', 'is', 'are', 'do', 'does', 'am', 'not', 'to', 'in', 'can', 'was'];
 const QUESTIONS = 5;
 const keyOf = (unitId: string, level: Level) => `puzzle_${unitId}_${level}`;
 const shuffle = <T,>(a: T[]): T[] => [...a].sort(() => Math.random() - 0.5);
@@ -35,7 +39,7 @@ const otherUnitsToday = (unitId: string): number => {
   const today = new Date().toDateString();
   const units = new Set<string>();
   for (const [k, t] of Object.entries(at)) {
-    const m = k.match(/^puzzle_(.+)_(easy|normal)$/);
+    const m = k.match(/^puzzle_(.+)_(easy|normal|hard)$/);
     if (m && new Date(t).toDateString() === today) units.add(m[1]);
   }
   if (units.has(unitId)) return -1;
@@ -73,7 +77,9 @@ export const WordPuzzle: React.FC = () => {
 
   const setup = (s: PuzzleSentence, lv: Level) => {
     const { words } = toCards(s.en);
-    const texts = lv === 'normal' ? [...words, ...s.extra] : words;
+    const used = new Set([...words.map(w => w.toLowerCase()), ...s.extra.map(w => w.toLowerCase())]);
+    const decoy = shuffle(DECOYS.filter(d => !used.has(d))).slice(0, 1);
+    const texts = lv === 'hard' ? [...words, ...s.extra, ...decoy] : lv === 'normal' ? [...words, ...s.extra] : words;
     let cards = shuffle(texts.map((text, id) => ({ id, text })));
     // たまたま正しい順にならんでしまったら、まぜ直す
     if (cards.slice(0, words.length).every((c, i) => c.text === words[i])) cards = [...cards].reverse();
@@ -88,7 +94,7 @@ export const WordPuzzle: React.FC = () => {
   };
 
   const place = (c: Card) => {
-    if (phase !== 'play' || placed.length >= answer.words.length) return;
+    if (phase !== 'play' || (level !== 'hard' && placed.length >= answer.words.length)) return;
     setPool(p => p.filter(x => x.id !== c.id)); setPlaced(p => [...p, c]); setMarks(null);
   };
   const unplace = (c: Card) => {
@@ -101,8 +107,8 @@ export const WordPuzzle: React.FC = () => {
     if (!unit || !level) return;
     const ratio = count / QUESTIONS;
     if (ratio < 0.5) { setEarned(0); return; }   // 不合格：加点なし・回数も数えない
-    const mul = ratio * (level === 'easy' ? 0.5 : 1) * breadthMul(otherUnitsToday(unit.id));
-    const pts = await addPoints(keyOf(unit.id, level), { multiplier: mul, isPerfect: count === QUESTIONS && level === 'normal' });
+    const mul = ratio * LEVEL_MUL[level] * breadthMul(otherUnitsToday(unit.id));
+    const pts = await addPoints(keyOf(unit.id, level), { multiplier: mul, isPerfect: count === QUESTIONS && level !== 'easy' });
     setEarned(pts);
   };
 
@@ -123,7 +129,7 @@ export const WordPuzzle: React.FC = () => {
       setTimeout(() => next(count), 2200);
       return;
     }
-    if (tries >= 1) { setPhase('answer'); speak(current.en.replace(/_/g, ' ')); return; }
+    if (tries >= 1 || level === 'hard') { setPhase('answer'); speak(current.en.replace(/_/g, ' ')); return; }
     setTries(tries + 1);
     setMarks(placed.map((c, i) => c.text === answer.words[i]));
   };
@@ -158,7 +164,7 @@ export const WordPuzzle: React.FC = () => {
     const at = readJson(`clearAt_${sid}`);
     const today = new Date().toDateString();
     const doneToday = new Set(Object.entries(at).map(([k, t]) => {
-      const m = k.match(/^puzzle_(.+)_(easy|normal)$/);
+      const m = k.match(/^puzzle_(.+)_(easy|normal|hard)$/);
       return m && new Date(t).toDateString() === today ? m[1] : '';
     }).filter(Boolean)).size;
     const left = Math.max(0, FULL_UNITS_PER_DAY - doneToday);
@@ -176,14 +182,15 @@ export const WordPuzzle: React.FC = () => {
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
           {list.map(u => {
             const e = (counts[keyOf(u.id, 'easy')] || 0) > 0;
-            const n = (counts[keyOf(u.id, 'normal')] || 0) > 0;
+            const h = (counts[keyOf(u.id, 'hard')] || 0) > 0;
+            const n = h || (counts[keyOf(u.id, 'normal')] || 0) > 0;
             return (
               <div key={u.id} className="glass-card hover-scale"
                 style={{ padding: '1.5rem', cursor: 'pointer', border: n ? '2px solid var(--color-success)' : '2px solid #e2e8f0', background: n ? '#f0fdf4' : 'white' }}
                 onClick={() => { setLevel(null); setParams({ grade: String(u.grade), id: u.id }); }}>
                 <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)' }}>{u.unitName}</h4>
                 <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>
-                  やさしい {e ? '✅' : '—'}　ふつう {n ? '✅' : '—'}
+                  やさしい {e ? '✅' : '—'}　ふつう {n ? '✅' : '—'}　むずかしい {h ? '✅' : '—'}
                 </p>
               </div>
             );
@@ -211,6 +218,10 @@ export const WordPuzzle: React.FC = () => {
           <h3 style={{ margin: '0 0 0.4rem 0' }}>🔥 ふつう</h3>
           <p style={{ margin: 0, color: '#64748b' }}>使わないカードが1枚まざっているよ。ポイントは「やさしい」の2倍！</p>
         </div>
+        <div className="glass-card hover-scale" style={{ padding: '1.5rem', cursor: 'pointer', background: 'white' }} onClick={() => start('hard')}>
+          <h3 style={{ margin: '0 0 0.4rem 0' }}>🏔️ むずかしい</h3>
+          <p style={{ margin: 0, color: '#64748b' }}>使わないカードが2枚。何語の文かのわくも出ない。チャンスは1回だけ。ポイントは「やさしい」の3倍！</p>
+        </div>
         <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>全部で{QUESTIONS}問。一発で正解した数で、ポイントが決まるよ。</p>
       </div>
     );
@@ -231,9 +242,11 @@ export const WordPuzzle: React.FC = () => {
             : 'くり返しのため、今回はポイントなし。'}
         </p>
         {pass && level === 'easy' && <p style={{ margin: 0, color: '#475569' }}>次は「ふつう」にちょうせんしよう。ポイントが大きいよ！</p>}
+        {pass && level === 'normal' && <p style={{ margin: 0, color: '#475569' }}>「むずかしい」もあるよ。ちょうせんしてみよう！</p>}
         <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button variant="outline" onClick={() => start(level)} icon={RefreshCw}>もう一度</Button>
           {level === 'easy' && <Button onClick={() => start('normal')}>🔥 ふつうに進む</Button>}
+          {level === 'normal' && <Button onClick={() => start('hard')}>🏔️ むずかしいに進む</Button>}
           <Button variant="outline" onClick={backToList}>単元を選ぶ</Button>
         </div>
       </div>
@@ -241,7 +254,8 @@ export const WordPuzzle: React.FC = () => {
   }
 
   // ---------- 問題 ----------
-  const full = placed.length === answer.words.length;
+  // 「むずかしい」は空きのわくを見せない＝何語の文かも自分で考える。1枚以上ならべれば答え合わせできる
+  const full = level === 'hard' ? placed.length > 0 : placed.length === answer.words.length;
   const cardStyle: React.CSSProperties = {
     fontSize: '1.3rem', fontWeight: 'bold', padding: '0.6rem 1rem', borderRadius: '12px',
     border: '2px solid #94a3b8', background: 'white', color: '#0f172a', cursor: 'pointer',
@@ -250,7 +264,7 @@ export const WordPuzzle: React.FC = () => {
     <div className="flex-col gap-lg" style={{ flex: 1, padding: '1.5rem', maxWidth: '760px', margin: '0 auto', width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <Button variant="outline" size="sm" onClick={() => setLevel(null)} icon={ArrowLeft}>やめる</Button>
-        <span style={{ flex: 1, color: '#64748b' }}>{unit.unitName}（{level === 'easy' ? 'やさしい' : 'ふつう'}）</span>
+        <span style={{ flex: 1, color: '#64748b' }}>{unit.unitName}（{LEVEL_JA[level]}）</span>
         <strong>{qIndex + 1} / {questions.length}</strong>
       </div>
 
@@ -268,7 +282,7 @@ export const WordPuzzle: React.FC = () => {
             {i === 0 ? c.text.charAt(0).toUpperCase() + c.text.slice(1) : c.text}
           </button>
         ))}
-        {Array.from({ length: answer.words.length - placed.length }).map((_, i) => (
+        {level !== 'hard' && Array.from({ length: answer.words.length - placed.length }).map((_, i) => (
           <span key={`s${i}`} style={{ width: '64px', height: '48px', borderRadius: '12px', background: '#e2e8f0' }} />
         ))}
         <span style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#475569' }}>{answer.end}</span>

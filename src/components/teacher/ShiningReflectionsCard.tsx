@@ -25,14 +25,21 @@ export const ShiningReflectionsCard: React.FC<{ students: any[] }> = ({ students
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'picked' | 'cands'>('cands');
   const [picks, setPicks] = useState<Set<string>>(new Set());
+  // 自動で入ったもの（🤖）と、先生が外したもの（また自動で入らないよう目印として残す）
+  const [autoSet, setAutoSet] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [msg, setMsg] = useState('');
   const [wide, setWide] = useState(false);
 
   useEffect(() => {
     if (!open || !supabase) return;
-    supabase.from('reflection_picks').select('student_id,reflection_id').then(({ data, error }) => {
+    supabase.from('reflection_picks').select('student_id,reflection_id,auto,dismissed').then(({ data, error }) => {
       if (error) { setMsg('選んだものを読めなかった（先生のアカウントで開いてね）'); return; }
-      setPicks(new Set((data || []).map((r: any) => `${r.student_id}__${r.reflection_id}`)));
+      const k = (r: any) => `${r.student_id}__${r.reflection_id}`;
+      const rows = data || [];
+      setPicks(new Set(rows.filter((r: any) => !r.dismissed).map(k)));
+      setAutoSet(new Set(rows.filter((r: any) => r.auto && !r.dismissed).map(k)));
+      setDismissed(new Set(rows.filter((r: any) => r.dismissed).map(k)));
     });
   }, [open]);
 
@@ -55,18 +62,20 @@ export const ShiningReflectionsCard: React.FC<{ students: any[] }> = ({ students
   const key = (it: Item) => `${it.sid}__${it.rid}`;
   // 候補：「課題」か「できた・伸びた」があり、ほかと合わせて2つ以上の手がかりがある
   // 「ゆるめに」：手がかりが1つでもあれば出す（拾いもれ用）
-  const cands = all.filter(it => !picks.has(key(it)) && (wide ? it.cues.length >= 1 : it.cues.length >= 2 && (it.cues.includes('自分の課題') || it.cues.includes('できた・伸びた'))));
+  const cands = all.filter(it => !picks.has(key(it)) && !dismissed.has(key(it)) && (wide ? it.cues.length >= 1 : it.cues.length >= 2 && (it.cues.includes('自分の課題') || it.cues.includes('できた・伸びた'))));
   const picked = all.filter(it => picks.has(key(it)));
 
   const toggle = async (it: Item) => {
     if (!supabase) return;
     const k = key(it);
     const on = picks.has(k);
-    const { error } = on
-      ? await supabase.from('reflection_picks').delete().eq('student_id', it.sid).eq('reflection_id', it.rid)
-      : await supabase.from('reflection_picks').upsert({ student_id: it.sid, reflection_id: it.rid });
+    // 外すときは消さずに dismissed にする（消すと、次にその子がふりかえりを書いたとき自動でまた入るため）
+    const { error } = await supabase.from('reflection_picks')
+      .upsert({ student_id: it.sid, reflection_id: it.rid, dismissed: on, auto: false });
     if (error) { setMsg('保存できなかった'); return; }
-    setPicks(prev => { const n = new Set(prev); if (on) n.delete(k); else n.add(k); return n; });
+    const flip = (set: React.Dispatch<React.SetStateAction<Set<string>>>, add: boolean) =>
+      set(prev => { const n = new Set(prev); if (add) n.add(k); else n.delete(k); return n; });
+    flip(setPicks, !on); flip(setDismissed, on); flip(setAutoSet, false);
   };
 
   const downloadCsv = () => {
@@ -96,7 +105,7 @@ export const ShiningReflectionsCard: React.FC<{ students: any[] }> = ({ students
       </div>
       {open && (<>
         <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.6rem 0' }}>
-          自分の課題・次の一歩・伸びたことが書かれたふりかえりを、ことばの手がかりで候補に出します（この画面の中だけで判定。AIには送りません）。⭐を押すと「集めたもの」に入ります。新しいふりかえりも、開くたびに候補に入ります。
+          自分の課題・次の一歩・伸びたことが書かれたふりかえりを、ことばの手がかりで候補に出します（この画面の中だけで判定。AIには送りません）。⭐を押すと「集めたもの」に入ります。手がかりが3つ以上そろったものは、書かれたときに自動で「集めたもの」に入ります（🤖自動。⭐を押せば外せて、また入ることはありません）。
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
           <button style={pill(tab === 'cands')} onClick={() => setTab('cands')}>候補 {cands.length}</button>
@@ -116,6 +125,7 @@ export const ShiningReflectionsCard: React.FC<{ students: any[] }> = ({ students
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
                     {fmt(it.date)}　{it.sid} {it.name}{it.grade ? `（${it.grade}年）` : ''}　{'★'.repeat(it.stars)}
+                    {autoSet.has(key(it)) && <span style={{ marginLeft: '0.3rem', fontSize: '0.75rem' }}>🤖自動</span>}
                     {it.cues.length > 0 && <>　{it.cues.map(c => <span key={c} style={{ marginLeft: '0.3rem', padding: '0 0.4rem', borderRadius: '6px', background: '#ecfdf5', color: '#047857' }}>{c}</span>)}</>}
                   </div>
                   <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.95rem' }}>{it.comment}</div>

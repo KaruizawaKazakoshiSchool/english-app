@@ -113,7 +113,8 @@ export const MyProgress: React.FC = () => {
   // ことばパズル（子どもの声 2026-11-15「自分の記録に言葉パズルの記録も」）。
   //   「ふつう」をクリアした単元を数える（やさしいだけの単元は半分として数える）
   const puzzleList = PUZZLE_UNITS.filter(u => forMe(u.grade));
-  const puzzleClear = (id: string, lv: string) => (clearCounts[`puzzle_${id}_${lv}`] || 0) > 0;
+  const puzzleClear = (id: string, lv: string) => (clearCounts[`puzzle_${id}_${lv}`] || 0) > 0
+      || (lv === 'normal' && (clearCounts[`puzzle_${id}_hard`] || 0) > 0);  // むずかしいをクリアしたら ふつうもクリア扱い
   const puzzleDone = puzzleList.filter(u => puzzleClear(u.id, 'normal')).length;
   const puzzleHalf = puzzleList.filter(u => !puzzleClear(u.id, 'normal') && puzzleClear(u.id, 'easy')).length;
   const puzzlePct = puzzleList.length > 0 ? Math.round(((puzzleDone + puzzleHalf / 2) / puzzleList.length) * 100) : 0;
