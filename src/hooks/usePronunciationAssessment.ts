@@ -102,6 +102,11 @@ const downsample = (buffer: Float32Array, inRate: number, outRate: number): Floa
  * キーはブラウザに置かない。Edge Function（azure-token）から10分有効のトークンを
  * 毎回もらって接続する。
  */
+const rmsOf = (chunks: Float32Array[]): number => {
+  let sum = 0, n = 0;
+  for (const c of chunks) for (let i = 0; i < c.length; i += 4) { sum += c[i] * c[i]; n++; }
+  return n ? Math.sqrt(sum / n) : 0;
+};
 // 録音がほぼ無音か（RMSで判定）。マイク不調と「聞き取れなかった」を区別するために使う。
 const isNearSilent = (chunks: Float32Array[]): boolean => {
   let sum = 0;
@@ -393,7 +398,13 @@ export const usePronunciationAssessment = () => {
                 // 無音 / 認識できず（NoMatch）：0点として記録せず null を返して再挑戦させる。
                 // さらに録音がほぼ無音なら「マイクが拾えていない」と案内を分ける（P0-3）。
                 const silent = isNearSilent(replay || recordedChunksRef.current);
-                logVoiceEvent({ kind: 'azure', ok: false, code: silent ? 'silent' : 'nomatch' });
+                // 原因を見分けるため、聞き取れなかった理由（はじめの無音／はじめの雑音／認識できず）と音の大きさ・長さを残す
+                let why = '';
+                try { why = SpeechSDK.NoMatchReason[SpeechSDK.NoMatchDetails.fromResult(result).reason] || ''; } catch { /* noop */ }
+                const ch = replay || recordedChunksRef.current;
+                const secs = ch.reduce((n, c) => n + c.length, 0) / 16000;
+                logVoiceEvent({ kind: 'azure', ok: false, code: silent ? 'silent' : 'nomatch',
+                  detail: `${why} rms=${rmsOf(ch).toFixed(4)} sec=${secs.toFixed(1)} ref=${referenceText.split(/\s+/).length}w` });
                 const msg = silent
                   ? '🎙️ マイクの音が届いていないみたい。イヤホンマイクのさしこみや、マイクの許可を確かめて、先生を呼ぼう！'
                   : '声が聞き取れなかったよ。もう一度マイクを押して、ゆっくりはっきり言ってみてね';

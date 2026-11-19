@@ -52,7 +52,7 @@ export const WordPuzzle: React.FC = () => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { addPoints } = usePoints();
-  const { speak } = useSpeechSynthesis();
+  const { speak, speakWord } = useSpeechSynthesis();
 
   const grade = params.get('grade') === '6' ? 6 : params.get('grade') === '5' ? 5 : null;
   const unit: PuzzleUnit | undefined = PUZZLE_UNITS.find(u => u.id === params.get('id'));
@@ -96,6 +96,8 @@ export const WordPuzzle: React.FC = () => {
   const place = (c: Card) => {
     if (phase !== 'play' || (level !== 'hard' && placed.length >= answer.words.length)) return;
     setPool(p => p.filter(x => x.id !== c.id)); setPlaced(p => [...p, c]); setMarks(null);
+    // 置いたカードの音を出す（子どもの声 2026-11-19「言い方がわからないから音が出てほしい」）
+    speakWord(c.text.replace(/_/g, ' '));
   };
   const unplace = (c: Card) => {
     if (phase !== 'play') return;
