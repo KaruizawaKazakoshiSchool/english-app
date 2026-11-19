@@ -10,7 +10,7 @@
 //   - 教科書 /textbook?set=<set>  … そのセットをクリアしたか
 //   - ダイアログ /dialogue?id=<id> … その話型をクリアしたか
 //   - AI英会話 /ai?unit=<id>      … その Unit で CLEAR ＋ ボーナス（2つ）
-//     AI英会話の加点キーは Unit をまたいで共通（ai_clear_freetalk）なので、Unit ごとの記録を別に残す（markUnitClear）
+//     AI英会話の加点キーは以前 Unit をまたいで共通（ai_clear_freetalk）だった（2026-11-19からUnitごと）ので、Unit ごとの記録を別に残す（markUnitClear）
 import { pushToSupabase } from './sync';
 import type { DictCategoryProgress } from '../hooks/useDictionaryProgress';
 

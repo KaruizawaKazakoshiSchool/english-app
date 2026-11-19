@@ -307,6 +307,10 @@ export const AIAssistant: React.FC = () => {
     if (!error) { setShowRecord(false); setTeamName(''); }
     setTimeout(() => setRecordMsg(''), 4000);
   };
+  // 加点の回数はUnitごとに数える（2026-11-19）。以前は ai_clear_freetalk 1つを全Unitで共有していて、
+  // 別のUnitでも、ほかでフリートークをたくさんクリアした子（チームで記録した端末の子など）は「くり返しのため0P」になっていた
+  const pointKey = (kind: 'clear' | 'bonus') =>
+    mode === 'freetalk' && activeUnitIdRef.current ? `ai_${kind}_freetalk_${activeUnitIdRef.current}` : `ai_${kind}_${mode}`;
   const awardedRef = useRef(false);
   const bonusAwardedRef = useRef(false);
   const [bonusMsg, setBonusMsg] = useState(false);
@@ -444,12 +448,12 @@ export const AIAssistant: React.FC = () => {
     if (rules?.clearAll?.length && !awardedRef.current && rules.clearAll.every(re => safeTest(re, saidSoFar))) {
       awardedRef.current = true;
       setCleared(true);
-      addPoints(`ai_clear_${mode}`, { multiplier: findEiken(eiken).multiplier })
+      addPoints(pointKey('clear'), { multiplier: findEiken(eiken).multiplier })
         .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_clear_${activeUnitIdRef.current}`); });
     } else if (rules?.bonusAny?.length && awardedRef.current && !bonusAwardedRef.current && rules.bonusAny.some(re => safeTest(re, text.toLowerCase()))) {
       bonusAwardedRef.current = true;
       setBonusMsg(true);
-      addPoints(`ai_bonus_${mode}`, { multiplier: findEiken(eiken).multiplier * 0.5 })
+      addPoints(pointKey('bonus'), { multiplier: findEiken(eiken).multiplier * 0.5 })
         .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_bonus_${activeUnitIdRef.current}`); });
     }
     try {
@@ -476,13 +480,13 @@ export const AIAssistant: React.FC = () => {
         awardedRef.current = true;
         setCleared(true);
         // きびしい条件をクリアした分だけ上乗せ（レベルを盛ってもラクにはならないので自己申告でよい）
-        addPoints(`ai_clear_${mode}`, { multiplier: findEiken(eiken).multiplier })
+        addPoints(pointKey('clear'), { multiplier: findEiken(eiken).multiplier })
         .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_clear_${activeUnitIdRef.current}`); });
       }
       if (didBonus && awardedRef.current && !bonusAwardedRef.current && !rules?.bonusAny?.length) {
         bonusAwardedRef.current = true;
         setBonusMsg(true);
-        addPoints(`ai_bonus_${mode}`, { multiplier: findEiken(eiken).multiplier * 0.5 })
+        addPoints(pointKey('bonus'), { multiplier: findEiken(eiken).multiplier * 0.5 })
         .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_bonus_${activeUnitIdRef.current}`); });
       }
     } catch (err: any) {
