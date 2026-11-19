@@ -46,7 +46,10 @@ const renderEn = (en: string) => {
 export const DialogueTrainer: React.FC = () => {
   const navigate = useNavigate();
   const goBack = useSafeBack();
-  const { speak } = useSpeechSynthesis();
+  const { speak, speakSlow, speakWord } = useSpeechSynthesis();
+  // 🐢 1語ずつ：いま読んでいるセリフと語の位置（文字の下に1語ずつ光らせる）
+  const [slow, setSlow] = useState<{ line: number; word: number } | null>(null);
+  const slowRunRef = useRef(0);
   const { assess, isAssessing, isAvailable: azureAvailable, lastRecordingUrl, getLastError } = usePronunciationAssessment();
   const { addScore } = usePronunciationHistory();
   const { addPoints } = usePoints();
@@ -107,7 +110,30 @@ export const DialogueTrainer: React.FC = () => {
     setGrade(g === '6' ? 6 : 5);
   }, [searchParams]);
 
-  const handleSpeak = (line: DialogueLine) => speak(cleanText(line.en));
+  const handleSpeak = (line: DialogueLine) => { slowRunRef.current++; setSlow(null); speak(cleanText(line.en)); };
+
+  // 🐢 1語ずつ読んで、最後に文全体をゆっくり読む。もう一度押すと止まる
+  const slowWords = (en: string) => cleanText(en).split(/\s+/).filter(Boolean);
+  const handleSlow = (idx: number, line: DialogueLine) => {
+    const run = ++slowRunRef.current;
+    if (slow?.line === idx) { setSlow(null); window.speechSynthesis?.cancel(); return; }
+    const words = slowWords(line.en);
+    const step = (i: number) => {
+      if (slowRunRef.current !== run) return;
+      if (i >= words.length) {
+        setSlow({ line: idx, word: -1 });
+        setTimeout(() => {
+          if (slowRunRef.current !== run) return;
+          speakSlow(cleanText(line.en), () => { if (slowRunRef.current === run) setSlow(null); });
+        }, 500);
+        return;
+      }
+      setSlow({ line: idx, word: i });
+      const w = words[i].replace(/[.,!?;:"]+$/g, '').replace(/^["]+/, '');
+      speakWord(w || words[i], () => setTimeout(() => step(i + 1), 350));
+    };
+    step(0);
+  };
 
   const handlePractice = async (idx: number, line: DialogueLine) => {
     if (isAssessing) return;
@@ -280,6 +306,14 @@ export const DialogueTrainer: React.FC = () => {
               ) : (
                 <>
                   <div style={{ fontSize: '1.3rem', fontFamily: 'var(--font-heading)' }}>{renderEn(line.en)}</div>
+                  {slow?.line === idx && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.4rem' }}>
+                      {slowWords(line.en).map((w, wi) => (
+                        <span key={wi} style={{ padding: '0.15rem 0.5rem', borderRadius: '8px', fontSize: '1.2rem', fontWeight: 'bold',
+                          background: slow.word === wi || slow.word === -1 ? '#00b894' : '#f1f5f9', color: slow.word === wi || slow.word === -1 ? 'white' : '#334155' }}>{w}</span>
+                      ))}
+                    </div>
+                  )}
                   {showJa && <div style={{ fontSize: '0.95rem', color: '#666', marginTop: '0.3rem' }}>{line.ja}</div>}
                 </>
               )}
@@ -289,6 +323,12 @@ export const DialogueTrainer: React.FC = () => {
                   <button onClick={() => handleSpeak(line)} title="聞く"
                     style={{ background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: 'pointer', fontSize: '1.1rem', flexShrink: 0 }}>
                     🔈
+                  </button>
+                )}
+                {!(level === 'hard' && isMine && !(score !== undefined && score >= PASS)) && (
+                  <button onClick={() => handleSlow(idx, line)} title="1語ずつ ゆっくり"
+                    style={{ background: slow?.line === idx ? '#00b894' : 'white', color: slow?.line === idx ? 'white' : '#00b894', border: '2px solid #00b894', borderRadius: '999px', height: '38px', padding: '0 0.8rem', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 'bold', flexShrink: 0 }}>
+                    🐢 {slow?.line === idx ? 'とめる' : 'ゆっくり'}
                   </button>
                 )}
 

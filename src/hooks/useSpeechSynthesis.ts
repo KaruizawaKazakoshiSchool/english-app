@@ -102,5 +102,11 @@ export const useSpeechSynthesis = () => {
     fallbackSpeak(text, onEnd, 0.45);
   }, []);
 
-  return { speak, speakSlow };
+  // 1語ずつ読む用（2026-11-19「ダイアログが速すぎて分からない子が多い」）。
+  // speak は1文字（I, a）をフォニックスの音ファイルで鳴らしてしまうので、必ず読み上げの声を使う
+  const speakWord = useCallback((text: string, onEnd?: () => void) => {
+    fallbackSpeak(text, onEnd, 0.7);
+  }, []);
+
+  return { speak, speakSlow, speakWord };
 };
