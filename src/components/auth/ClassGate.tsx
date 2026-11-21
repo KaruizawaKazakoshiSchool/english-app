@@ -15,6 +15,8 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
   const [busy, setBusy] = useState(false);
 
   const showAikotoba = urlWantsAikotoba();
+  // Googleから戻ってきたときにエラーが付いていたら（学園以外のアカウントを選んだ等）、理由を出す
+  const oauthFailed = /error=|error_description=/.test(window.location.search + window.location.hash);
   const handleGoogle = async () => {
     setBusy(true);
     setError('');
@@ -74,6 +76,18 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
         style={{ padding: '0.9rem 2rem', fontSize: '1.25rem', background: 'white', color: '#1a73e8', border: '2px solid #1a73e8', borderRadius: '999px', fontWeight: 'bold', cursor: busy ? 'wait' : 'pointer' }}>
         🔵 学園のGoogleで 入る
       </button>
+      {oauthFailed && !error && (
+        <div style={{ color: 'var(--color-error)', fontWeight: 'bold', fontSize: '1rem', maxWidth: '440px' }}>
+          入れなかったよ。学園のアカウント（学校のメール）を選んで、もう一度試してね
+        </div>
+      )}
+      {/* 家のパソコンで迷う子がいた（子どもの声 2026-11-20）。Googleの画面で何を選べばよいかを先に伝える */}
+      <div style={{ fontSize: '0.9rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.7, textAlign: 'left' }}>
+        🏠 家のパソコンやタブレットのとき：<br />
+        ① ボタンを押すとGoogleの画面になるよ<br />
+        ② 家の人のアカウントではなく、<b>学校のメール</b>を選ぶ（なければ「別のアカウントを使用」）<br />
+        ③ 学校のメールとパスワードを入れると、この画面にもどって入れるよ
+      </div>
       {error && !showAikotoba && (
         <div style={{ color: 'var(--color-error)', fontWeight: 'bold', fontSize: '1rem' }}>
           {error}

@@ -167,6 +167,8 @@ export const usePronunciationAssessment = () => {
   const activePushRef = useRef<SpeechSDK.PushAudioInputStream | null>(null);
   // 録音再生用に、流し込んだのと同じ 16kHz PCM を溜めておく。
   const recordedChunksRef = useRef<Float32Array[]>([]);
+  // 先にもらっておいた次のトークン
+  const prefetchRef = useRef<{ at: number; p: Promise<Awaited<ReturnType<typeof fetchAzureSpeechToken>> | Error> } | null>(null);
 
   // 認証に失敗していると分かっている間は「使えない」として扱う
   const [authFailed, setAuthFailed] = useState<boolean>(readAuthFailed);
@@ -253,7 +255,13 @@ export const usePronunciationAssessment = () => {
       setIsAssessing(true);
 
       // マイクの準備と並行して、Azureの使い捨てトークン（10分有効）をサーバーからもらう。
-      const tokenPromise = fetchAzureSpeechToken().catch((e: unknown) => e as Error);
+      // 待ち時間を減らすため、前回の採点のあとに次のトークンを先にもらっておく（子どもの声 2026-11-21「反応遅すぎ」）。
+      // 1回の採点につき1枚使う＝サーバーの回数の数え方は変わらない。8分たったものは使わない。
+      const pre = prefetchRef.current;
+      prefetchRef.current = null;
+      const tokenPromise = pre && Date.now() - pre.at < 8 * 60 * 1000
+        ? pre.p
+        : fetchAzureSpeechToken().catch((e: unknown) => e as Error);
 
       try {
         await ensurePipeline();
@@ -266,6 +274,10 @@ export const usePronunciationAssessment = () => {
       }
 
       const auth = await tokenPromise;
+      if (!(auth instanceof Error)) {
+        // 次の採点用を先にもらっておく（今の採点と並行）
+        prefetchRef.current = { at: Date.now(), p: fetchAzureSpeechToken().catch((e: unknown) => e as Error) };
+      }
       if (auth instanceof Error) {
         setIsAssessing(false);
         const status = auth instanceof ProxyError ? auth.status : 0;

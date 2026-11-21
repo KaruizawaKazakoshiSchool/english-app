@@ -14,6 +14,10 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-11-21', text: '🎯 AI英会話に「ミッションできた？ 確かめる」ボタン。クリアしたのにならないときに押してみてね', fromVoice: true },
+  { date: '2026-11-21', text: '✅ AI英会話のUnit一覧に、クリアしたUnitの印がつくようになったよ（⭐はボーナスも）', fromVoice: true },
+  { date: '2026-11-21', text: '🎤 発音チェックで、話してから結果が出るまでを少し速くしたよ', fromVoice: true },
+  { date: '2026-11-21', text: '🏠 入口の画面に、家のパソコンで入るときのやり方をのせたよ', fromVoice: true },
   { date: '2026-11-19', text: '🔈 ことばパズルで、カードを置くとその単語の音が出るようになったよ', fromVoice: true },
   { date: '2026-11-19', text: '🐢 ダイアログに「ゆっくり」ボタンができたよ。1語ずつ読んで、最後に文をゆっくり読むよ', fromVoice: true },
   { date: '2026-11-19', text: '🤖 AI英会話で、前に別のUnitをたくさんクリアしていると「くり返しのためポイントなし」になっていたのを直したよ。Unitごとに数えるよ', fromVoice: true },

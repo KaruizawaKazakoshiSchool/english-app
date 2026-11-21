@@ -237,6 +237,17 @@ export const AIAssistant: React.FC = () => {
   const { transcript, isRecording, startListening, stopListening, setTranscript } = useSpeechRecognition();
   const { totalPoints, addPoints } = usePoints();
   const studentId = localStorage.getItem('studentId');
+  // Unit一覧に、クリアしたUnitの印を出す（子どもの声 2026-11-20「やったやつにチェックつくと嬉しい」）
+  const unitDone: Record<string, string> = (() => {
+    try {
+      const c = JSON.parse(localStorage.getItem(`clearCounts_${studentId}`) || '{}');
+      const out: Record<string, string> = {};
+      for (const u of FREETALK_UNITS) {
+        if (c[`ai_unit_clear_${u.id}`]) out[u.id] = c[`ai_unit_bonus_${u.id}`] ? '✅⭐' : '✅';
+      }
+      return out;
+    } catch { return {}; }
+  })();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [mode, setMode] = useState<keyof typeof SCENARIOS | null>(null);
@@ -247,6 +258,10 @@ export const AIAssistant: React.FC = () => {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [cleared, setCleared] = useState(false);
+  // 「🎯 ミッションできた？」の判定（AIが[CLEAR]を付け忘れることがある＝子どもの声 2026-11-20「ミッションクリアしてるのにクリアにならない」）
+  const [judging, setJudging] = useState(false);
+  const [judgeMsg, setJudgeMsg] = useState('');
+  const judgedAtRef = useRef(-99);
   const [situationInput, setSituationInput] = useState('');
   const [pendingFreetalk, setPendingFreetalk] = useState(true);
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
@@ -287,6 +302,42 @@ export const AIAssistant: React.FC = () => {
       // ヘルプの例文もUnitごとに差し替えられる（既定はダイアログの文＝役が逆になることがある）
       suggestions: ov.hints?.length ? ov.hints : opts.suggestions,
     };
+  };
+
+  // 子どもが「できたはず」と思ったときに、これまでの会話でミッションを達成したかをAIに判定してもらう。
+  // 先生がことばの決まり（clearAll）を設定したUnitは、決まりで判定しているので使わない。
+  // 連打で何度も聞けないよう、前に聞いてから子どもが2回話すまでは押せない。
+  const userTurns = messages.filter(m => m.role === 'user').length;
+  const unitRules = activeUnitIdRef.current ? freetalkGoals?.[activeUnitIdRef.current] : undefined;
+  const canJudge = !!chat && !cleared && !unitRules?.clearAll?.length && userTurns >= 3 && userTurns - judgedAtRef.current >= 2;
+  const checkGoal = async () => {
+    if (!chat || judging || awardedRef.current) return;
+    if (isOverCap('gemini')) { setJudgeMsg('今日のAIの回数は終わり。また明日確かめてね'); return; }
+    judgedAtRef.current = userTurns;
+    setJudging(true); setJudgeMsg('');
+    try {
+      incUsage('gemini');
+      const raw = await generateWithGemini({
+        system: chat.system + '\n\nNOW YOU ARE ONLY A FAIR JUDGE. Do not continue the conversation.',
+        contents: [...chat.history, { role: 'user', parts: [{ text:
+          'JUDGE CHECK (from the teacher, not the student): Look only at what the STUDENT (user) actually said in English above. ' +
+          'Has the GOAL been reached? Small grammar mistakes are OK. Reply with exactly one word: YES or NO.' }] }],
+        maxOutputTokens: 5,
+        temperature: 0,
+      });
+      if (/\bYES\b/i.test(raw) && !awardedRef.current) {
+        awardedRef.current = true;
+        setCleared(true);
+        addPoints(pointKey('clear'), { multiplier: findEiken(eiken).multiplier })
+          .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_clear_${activeUnitIdRef.current}`); });
+      } else {
+        setJudgeMsg('まだみたい。上のミッションをもう一度見て、足りないことを英語で言ってみよう！');
+      }
+    } catch (err: any) {
+      setJudgeMsg(friendlyAiError(err));
+    } finally {
+      setJudging(false);
+    }
   };
 
   // 今の会話を記録する（班名があればチーム記録＝チーム[CLEAR]の証跡になる）
@@ -337,6 +388,7 @@ export const AIAssistant: React.FC = () => {
     setMode(selectedMode);
     setPendingFreetalk(false);
     setCleared(false);
+    setJudgeMsg(''); judgedAtRef.current = -99;
     awardedRef.current = false;
     bonusAwardedRef.current = false;
     setBonusMsg(false);
@@ -686,6 +738,7 @@ export const AIAssistant: React.FC = () => {
                 onClick={() => startFreetalk(withGoalOverride(buildUnitOpts(u), u.id))}
                 style={{ padding: '0.7rem', borderRadius: '10px', border: '2px solid var(--color-primary)', background: 'white', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', textAlign: 'center' }}>
                 {u.label}
+                {unitDone[u.id] && <span style={{ marginLeft: '0.3rem' }}>{unitDone[u.id]}</span>}
               </button>
             ))}
           </div>
@@ -755,6 +808,15 @@ export const AIAssistant: React.FC = () => {
       {/* ゴール表示 */}
       <div style={{ background: 'rgba(253, 203, 110, 0.25)', border: '1px solid var(--color-accent)', borderRadius: '12px', padding: '0.5rem 1rem', marginBottom: '0.5rem', fontWeight: 'bold', color: '#7a5a00', textAlign: 'center', fontSize: '0.95rem' }}>
         <SpeakableText text={scenario.goalLabel} />
+        {canJudge && (
+          <div style={{ marginTop: '0.4rem' }}>
+            <button onClick={checkGoal} disabled={judging || isAiThinking}
+              style={{ padding: '0.3rem 0.9rem', borderRadius: '999px', border: '2px solid #b45309', background: 'white', color: '#b45309', fontWeight: 'bold', cursor: judging ? 'wait' : 'pointer', fontSize: '0.85rem' }}>
+              {judging ? '確認中…' : '🎯 ミッションできた？ 確かめる'}
+            </button>
+          </div>
+        )}
+        {judgeMsg && !cleared && <div style={{ marginTop: '0.3rem', fontSize: '0.85rem', color: '#92400e' }}>{judgeMsg}</div>}
       </div>
 
       {/* チームの順番ボード */}
