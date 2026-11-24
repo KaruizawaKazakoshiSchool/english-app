@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { playClip, stopAllSound } from '../../lib/playOne';
 import { Button } from '../ui/Button';
 import { Volume2, Volume2 as VolOn, VolumeX, RefreshCw, Play } from 'lucide-react';
 import { getPreferredVoice } from '../../lib/voice';
@@ -49,8 +50,7 @@ export const TypingTrainer: React.FC<TypingTrainerProps> = ({ words, speakWord, 
     if (!soundOnRef.current) return;
     const l = ch.toLowerCase();
     if (!isLetter(l)) return;
-    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${l}.mp3`);
-    audio.play().catch(() => {});
+    playClip(`${import.meta.env.BASE_URL}audio/${l}.mp3`).catch(() => {});
   }, []);
 
   const speak = useCallback((text: string) => {
@@ -61,6 +61,7 @@ export const TypingTrainer: React.FC<TypingTrainerProps> = ({ words, speakWord, 
     msg.rate = 0.8;
     const voice = getPreferredVoice(); // クリアな英語ボイスに固定
     if (voice) msg.voice = voice;
+    stopAllSound();
     window.speechSynthesis.speak(msg);
   }, [speakWord]);
 

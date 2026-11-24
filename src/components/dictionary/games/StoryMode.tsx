@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { stopAllSound, isCurrent } from '../../../lib/playOne';
 import { ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { usePoints } from '../../../hooks/usePoints';
@@ -392,7 +393,7 @@ ${SAFETY_INSTRUCTION}`;
   // 文を読み上げる。穴埋め部分は無音（少し間をあける）。
   const speakSentenceWithGaps = (parts: { f: StoryFragment; idx: number }[]) => {
     if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
+    const gen = stopAllSound();   // 前の読み上げを止める（連打で2つの読み上げが交互に鳴らないよう）
     const segments: ({ kind: 'speak'; text: string } | { kind: 'gap' })[] = [];
     let buf = '';
     parts.forEach(({ f }) => {
@@ -406,7 +407,7 @@ ${SAFETY_INSTRUCTION}`;
     const voice = getPreferredVoice();
     let i = 0;
     const next = () => {
-      if (i >= segments.length) return;
+      if (i >= segments.length || !isCurrent(gen)) return;
       const seg = segments[i++];
       if (seg.kind === 'gap') { setTimeout(next, 700); return; }
       const u = new SpeechSynthesisUtterance(seg.text);

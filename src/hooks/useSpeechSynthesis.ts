@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { getPreferredVoice, markNetworkVoiceBad } from '../lib/voice';
+import { playClip, stopAllSound, isCurrent } from '../lib/playOne';
 
 const AUDIO_LETTERS = [
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
@@ -34,7 +35,8 @@ export const useSpeechSynthesis = () => {
 
     const synth = window.speechSynthesis;
     const wasBusy = synth.speaking || synth.pending;
-    synth.cancel();
+    // 前の音（音ファイル・読み上げ）を止める。連打したとき、遅れて鳴らす分が積み重ならないよう番号で見分ける
+    const gen = stopAllSound();
 
     // Map digraphs to phonetic spellings if they are in the practice corner
     const textToSpeak = digraphMap[text] || text;
@@ -53,6 +55,7 @@ export const useSpeechSynthesis = () => {
       let started = false;
       utterance.onstart = () => { started = true; };
       const fallback = () => {
+        if (!isCurrent(gen)) return;
         if (started || retry || !voice || voice.localService) return;
         markNetworkVoiceBad();
         synth.cancel();
@@ -72,23 +75,19 @@ export const useSpeechSynthesis = () => {
       synth.speak(utterance);
     };
     // Chrome は cancel() の直後に speak() すると、最初の音が出ないことがある（「はじめ聞こえない」）
-    if (wasBusy) setTimeout(() => say(false), 60);
+    if (wasBusy) setTimeout(() => { if (isCurrent(gen)) say(false); }, 60);
     else say(false);
   };
 
   const speak = useCallback((text: string, onEnd?: () => void) => {
     const baseUrl = import.meta.env.BASE_URL;
     if (text.length === 1 && AUDIO_LETTERS.includes(text)) {
-      const audio = new Audio(`${baseUrl}audio/${text}.ogg`);
-      if (onEnd) audio.onended = onEnd;
-      audio.play().catch(e => {
+      playClip(`${baseUrl}audio/${text}.ogg`, onEnd).catch(e => {
         console.warn('Failed to play audio file, falling back to TTS:', e);
         fallbackSpeak(text, onEnd);
       });
     } else if (['sh', 'ch', 'th', 'ph', 'wh', 'ck', 'ng', 'ar', 'or', 'ir', 'air', 'ear', 'wor'].includes(text)) {
-      const audio = new Audio(`${baseUrl}audio/${text}.mp3`);
-      if (onEnd) audio.onended = onEnd;
-      audio.play().catch(e => {
+      playClip(`${baseUrl}audio/${text}.mp3`, onEnd).catch(e => {
         console.warn('Failed to play audio file, falling back to TTS:', e);
         fallbackSpeak(text, onEnd);
       });

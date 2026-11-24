@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { playClip, stopAllSound } from '../../lib/playOne';
 import { useParams, useNavigate } from 'react-router-dom';
 import { stages } from '../../data/stages';
 import { useSafeBack } from '../../hooks/useSafeBack';
@@ -109,8 +110,7 @@ export const Stage: React.FC = () => {
     // Play authentic IPA audio if it's a known phoneme block.
     // BASE_URL を付けないと GitHub Pages（/english-app/）配下で404になり音が鳴らない。
     if (LOCAL_PHONEMES.has(ltext)) {
-      const audio = new Audio(`${import.meta.env.BASE_URL}audio/${ltext}.mp3`);
-      audio.play().catch(e => console.error("Audio play failed:", e));
+      playClip(`${import.meta.env.BASE_URL}audio/${ltext}.mp3`).catch(e => console.error("Audio play failed:", e));
       return;
     }
 
@@ -121,6 +121,7 @@ export const Stage: React.FC = () => {
     msg.rate = 0.8;
     const voice = getPreferredVoice(); // クリアな英語ボイスに固定
     if (voice) msg.voice = voice;
+    stopAllSound();
     window.speechSynthesis.speak(msg);
   }, []);
 
