@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { wordForSpeech } from '../../lib/wordSound';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSafeBack } from '../../hooks/useSafeBack';
 import { ArrowLeft, Trophy } from 'lucide-react';
@@ -130,7 +131,7 @@ export const DialogueTrainer: React.FC = () => {
       }
       setSlow({ line: idx, word: i });
       const w = words[i].replace(/[.,!?;:"]+$/g, '').replace(/^["]+/, '');
-      speakWord(w || words[i], () => setTimeout(() => step(i + 1), 350));
+      speakWord(wordForSpeech(w || words[i], words, i), () => setTimeout(() => step(i + 1), 350));
     };
     step(0);
   };

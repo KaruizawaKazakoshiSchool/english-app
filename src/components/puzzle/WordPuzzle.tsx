@@ -4,6 +4,7 @@ import { ArrowLeft, Volume2, RefreshCw } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { usePoints } from '../../hooks/usePoints';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
+import { wordForSpeech } from '../../lib/wordSound';
 import { currentIsTrial } from '../../lib/trial';
 import { PUZZLE_UNITS, toCards, type PuzzleSentence, type PuzzleUnit } from './puzzleData';
 
@@ -97,7 +98,8 @@ export const WordPuzzle: React.FC = () => {
     if (phase !== 'play' || (level !== 'hard' && placed.length >= answer.words.length)) return;
     setPool(p => p.filter(x => x.id !== c.id)); setPlaced(p => [...p, c]); setMarks(null);
     // 置いたカードの音を出す（子どもの声 2026-11-19「言い方がわからないから音が出てほしい」）
-    speakWord(c.text.replace(/_/g, ' '));
+    // 文の中の位置が分かるカード（正解の語）は、前後の語を見て読み方を決める（live＝リヴ、the＝ザ／ジ）
+    speakWord(wordForSpeech(c.text.replace(/_/g, ' '), c.id < answer.words.length ? answer.words : undefined, c.id));
   };
   const unplace = (c: Card) => {
     if (phase !== 'play') return;
