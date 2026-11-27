@@ -14,6 +14,7 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-11-27', text: '📰 Googleで入っても「最近の更新」が見られるように、トップ画面にのせたよ。新しいものには NEW がつくよ', fromVoice: true },
   { date: '2026-11-24', text: '🗣️ 1語ずつ読むとき、live（住む）を「リヴ」、the を次のことばに合わせて「ザ」「ジ」と読むようにしたよ' },
   { date: '2026-11-24', text: '🔈 音のボタンを何回も押しても、音が重ならないようにしたよ（新しく押した音だけが鳴る）' },
   { date: '2026-11-21', text: '🎯 AI英会話に「ミッションできた？ 確かめる」ボタン。クリアしたのにならないときに押してみてね', fromVoice: true },

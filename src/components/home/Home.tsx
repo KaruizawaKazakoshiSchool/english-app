@@ -23,6 +23,7 @@ const missionVideo = (m: { route: string; videoUrl?: string }): string | undefin
   return DEFAULT_QUIZZES.find(q => q.id === id)?.url || undefined;
 };
 import { UnitHub } from './UnitHub';
+import { RecentUpdates } from '../auth/RecentUpdates';
 import { SpeakableText } from '../ui/SpeakableText';
 
 export const Home: React.FC = () => {
@@ -136,6 +137,8 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {!activeTab && <RecentUpdates compact />}
 
       {!activeTab && todayMissions.length > 0 && (
         <div style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
