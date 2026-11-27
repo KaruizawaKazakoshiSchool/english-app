@@ -32,7 +32,7 @@ export const VoiceBattle: React.FC = () => {
   
   const { speak } = useSpeechSynthesis();
   const { isRecording, transcript, startListening, stopListening, setTranscript } = useSpeechRecognition();
-  const { assess, isAssessing, isAvailable: azureAvailable, error: azureError, lastRecordingUrl, getLastError } = usePronunciationAssessment();
+  const { assess, isAssessing, isAvailable: azureAvailable, error: azureError, lastRecordingUrl, getLastError, stopAssess } = usePronunciationAssessment();
   const { saveProgress } = useDictionaryProgress();
   const { addScore } = usePronunciationHistory();
   const { addPoints } = usePoints();
@@ -385,10 +385,9 @@ export const VoiceBattle: React.FC = () => {
         )}
         <MicButton
           isRecording={azureAvailable ? isAssessing : isRecording}
-          disabled={azureAvailable && isAssessing}
           onClick={
             azureAvailable
-              ? handleAzureAttempt
+              ? (isAssessing ? stopAssess : handleAzureAttempt)
               : (isRecording ? stopListening : startListening)
           }
         />

@@ -425,7 +425,7 @@ export const vocabulary: Vocabulary[] = [
   { id: 'v412', english: 'pen', japanese: 'ペン', category: '文房具', page: 29, emoji: '🖊️', keyPhrase: "I want a new ◯◯." },
   { id: 'v413', english: 'pencil', japanese: 'えんぴつ', category: '文房具', page: 29, emoji: '✏️', keyPhrase: "I want a new ◯◯." },
   { id: 'v414', english: 'pencil case', japanese: '筆箱', category: '文房具', page: 29, emoji: '🎒', keyPhrase: "I want a new ◯◯." },
-  { id: 'v415', english: 'eraser', japanese: '消しゴム', category: '文房具', page: 29, emoji: '🧽', keyPhrase: "I want a new ◯◯." },
+  { id: 'v415', english: 'eraser', japanese: '消しゴム', category: '文房具', page: 29, emoji: '🧽', imageUrl: `${import.meta.env.BASE_URL}vocab/eraser.svg`, keyPhrase: "I want a new ◯◯." },
   { id: 'v416', english: 'ruler', japanese: 'じょうぎ', category: '文房具', page: 29, emoji: '📏', keyPhrase: "I want a new ◯◯." },
   { id: 'v417', english: 'glue', japanese: 'のり', category: '文房具', page: 29, emoji: '🧴', keyPhrase: "I want a new ◯◯." },
   { id: 'v418', english: 'scissors', japanese: 'はさみ', category: '文房具', page: 29, emoji: '✂️', keyPhrase: "I want a new ◯◯." },

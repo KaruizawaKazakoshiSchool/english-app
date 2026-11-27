@@ -53,6 +53,7 @@ export const TextbookMode: React.FC = () => {
   const {
     assess,
     isAssessing,
+    stopAssess,
     isAvailable: azureAvailable,
     lastRecordingUrl,
     getLastError,
@@ -592,13 +593,14 @@ export const TextbookMode: React.FC = () => {
               <button
                 onClick={() => {
                   if (azureAvailable) {
+                    if (isAssessing) { stopAssess(); return; }
                     setBonusScore(null);
                     handleAzureBonus();
                   } else {
                     isRecording ? stopListening() : startListening();
                   }
                 }}
-                disabled={isChecking || (azureAvailable && isAssessing)}
+                disabled={isChecking}
                 title={azureAvailable ? '英語のフレーズを声に出して読んでね' : undefined}
                 style={{
                   padding: '0 1.5rem',

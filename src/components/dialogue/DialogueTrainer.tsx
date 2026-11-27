@@ -51,7 +51,7 @@ export const DialogueTrainer: React.FC = () => {
   // 🐢 1語ずつ：いま読んでいるセリフと語の位置（文字の下に1語ずつ光らせる）
   const [slow, setSlow] = useState<{ line: number; word: number } | null>(null);
   const slowRunRef = useRef(0);
-  const { assess, isAssessing, isAvailable: azureAvailable, lastRecordingUrl, getLastError } = usePronunciationAssessment();
+  const { assess, isAssessing, isAvailable: azureAvailable, lastRecordingUrl, getLastError, stopAssess } = usePronunciationAssessment();
   const { addScore } = usePronunciationHistory();
   const { addPoints } = usePoints();
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
@@ -137,7 +137,7 @@ export const DialogueTrainer: React.FC = () => {
   };
 
   const handlePractice = async (idx: number, line: DialogueLine) => {
-    if (isAssessing) return;
+    if (isAssessing) { if (activeLine === idx) stopAssess(); return; }
     setActiveLine(idx);
     const result = await assess(cleanText(line.en));
     if (!result) {
@@ -336,12 +336,12 @@ export const DialogueTrainer: React.FC = () => {
                 {isMine && azureAvailable && (
                   <button
                     onClick={() => handlePractice(idx, line)}
-                    disabled={isAssessing}
-                    title="マイクで読む"
+                    disabled={isAssessing && activeLine !== idx}
+                    title={isAssessing && activeLine === idx ? '言い終わったら押す' : 'マイクで読む'}
                     className={isAssessing && activeLine === idx ? 'animate-pulse' : ''}
-                    style={{ background: (isAssessing && activeLine === idx) ? 'var(--color-error)' : 'var(--color-accent)', color: '#000', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: isAssessing ? 'default' : 'pointer', fontSize: '1.1rem', flexShrink: 0 }}
+                    style={{ background: (isAssessing && activeLine === idx) ? 'var(--color-error)' : 'var(--color-accent)', color: '#000', border: 'none', borderRadius: '50%', width: '38px', height: '38px', cursor: isAssessing && activeLine !== idx ? 'default' : 'pointer', fontSize: '1.1rem', flexShrink: 0 }}
                   >
-                    🎤
+                    {isAssessing && activeLine === idx ? '⏹' : '🎤'}
                   </button>
                 )}
 

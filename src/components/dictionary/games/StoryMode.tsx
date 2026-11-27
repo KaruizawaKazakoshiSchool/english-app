@@ -53,6 +53,7 @@ export const StoryMode: React.FC = () => {
   const {
     assess,
     isAssessing,
+    stopAssess,
     isAvailable: azureAvailable,
     lastRecordingUrl,
     getLastError,
@@ -661,8 +662,9 @@ ${SAFETY_INSTRUCTION}`;
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
                     <MicButton
                       isRecording={azureAvailable ? isAssessing : isRecording}
-                      disabled={selectedSentenceIndex === null || (azureAvailable && isAssessing)}
+                      disabled={selectedSentenceIndex === null}
                       onClick={() => {
+                        if (azureAvailable && isAssessing) { stopAssess(); return; }
                         if (selectedSentenceIndex === null) {
                           alert('まずは読みたい文を選んでね！');
                           return;

@@ -182,7 +182,8 @@ const SCENARIOS: Record<string, Scenario> = {
     emoji: '👋', title: 'フリートーク', desc: 'すきなことについて自由に話そう！',
     role: 'You are Jordan, a friendly 10-year-old talking with the user.',
     goal: 'Have a friendly chat. After several good exchanges, you may wrap up the conversation nicely.',
-    goalLabel: '🎯 ミッション：すきなことを英語で話してみよう！',
+    // 「好きなことを話してみようなのに、ミッション？？」（子どもの声 2026-11-22）＝自由に話す場なので「ミッション」と呼ばない
+    goalLabel: '💬 すきなことを英語で話そう！ 何回かやりとりできたらクリア',
     greeting: { en: 'Hi! I am Jordan. Nice to meet you!', ja: 'やあ！ジョーダンだよ。よろしく！' },
     suggestions: [
       { en: 'I like soccer.', ja: 'サッカーが好きです。' },
@@ -331,7 +332,7 @@ export const AIAssistant: React.FC = () => {
         addPoints(pointKey('clear'), { multiplier: findEiken(eiken).multiplier })
           .then(() => { if (activeUnitIdRef.current) markUnitClear(`ai_unit_clear_${activeUnitIdRef.current}`); });
       } else {
-        setJudgeMsg('まだみたい。上のミッションをもう一度見て、足りないことを英語で言ってみよう！');
+        setJudgeMsg('まだみたい。上の黄色いところをもう一度見て、足りないことを英語で言ってみよう！');
       }
     } catch (err: any) {
       setJudgeMsg(friendlyAiError(err));
@@ -812,7 +813,7 @@ export const AIAssistant: React.FC = () => {
           <div style={{ marginTop: '0.4rem' }}>
             <button onClick={checkGoal} disabled={judging || isAiThinking}
               style={{ padding: '0.3rem 0.9rem', borderRadius: '999px', border: '2px solid #b45309', background: 'white', color: '#b45309', fontWeight: 'bold', cursor: judging ? 'wait' : 'pointer', fontSize: '0.85rem' }}>
-              {judging ? '確認中…' : '🎯 ミッションできた？ 確かめる'}
+              {judging ? '確認中…' : '✅ クリアできた？ 確かめる'}
             </button>
           </div>
         )}

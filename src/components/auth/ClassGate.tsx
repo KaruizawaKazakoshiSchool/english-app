@@ -78,15 +78,15 @@ export const ClassGate: React.FC<{ onAuthed: () => void }> = ({ onAuthed }) => {
       </button>
       {oauthFailed && !error && (
         <div style={{ color: 'var(--color-error)', fontWeight: 'bold', fontSize: '1rem', maxWidth: '440px' }}>
-          入れなかったよ。学園のアカウント（学校のメール）を選んで、もう一度試してね
+          入れなかったよ。学校のアカウント（さいごが「@kazakoshi…」のもの）を選んで、もう一度試してね
         </div>
       )}
       {/* 家のパソコンで迷う子がいた（子どもの声 2026-11-20）。Googleの画面で何を選べばよいかを先に伝える */}
       <div style={{ fontSize: '0.9rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.7, textAlign: 'left' }}>
         🏠 家のパソコンやタブレットのとき：<br />
         ① ボタンを押すとGoogleの画面になるよ<br />
-        ② 家の人のアカウントではなく、<b>学校のメール</b>を選ぶ（なければ「別のアカウントを使用」）<br />
-        ③ 学校のメールとパスワードを入れると、この画面にもどって入れるよ
+        ② 家の人のアカウントではなく、<b>学校のアカウント</b>を選ぶ＝学校のChromebookで使っている、さいごが「<b>@kazakoshi…</b>」のもの（出てこなければ「別のアカウントを使用」）<br />
+        ③ その「@kazakoshi…」とパスワードを入れると、この画面にもどって入れるよ
       </div>
       {error && !showAikotoba && (
         <div style={{ color: 'var(--color-error)', fontWeight: 'bold', fontSize: '1rem' }}>

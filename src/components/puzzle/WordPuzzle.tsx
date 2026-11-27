@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Volume2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Volume2, RefreshCw, Star } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { usePoints } from '../../hooks/usePoints';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
@@ -270,6 +270,18 @@ export const WordPuzzle: React.FC = () => {
         <Button variant="outline" size="sm" onClick={() => setLevel(null)} icon={ArrowLeft}>やめる</Button>
         <span style={{ flex: 1, color: '#64748b' }}>{unit.unitName}（{LEVEL_JA[level]}）</span>
         <strong>{qIndex + 1} / {questions.length}</strong>
+      </div>
+      {/* 一発で正解した数を⭐で（子どもの声 2026-11-24「絵辞典みたいに星で何個まちがえたか出てほしい」）。
+          ぬりつぶし＝一発で正解／オレンジのわく＝まちがえた問題／灰色＝これから */}
+      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', marginTop: '-0.6rem' }}>
+        {Array.from({ length: questions.length }).map((_, i) => {
+          const doneQ = qIndex + (phase === 'correct' || phase === 'answer' ? 1 : 0);
+          return (
+            <Star key={i} size={22}
+              fill={i < firstTry ? 'var(--color-accent)' : 'transparent'}
+              color={i < firstTry ? 'var(--color-accent)' : i < doneQ ? '#ff9f43' : '#ccc'} />
+          );
+        })}
       </div>
 
       <div className="glass-card" style={{ padding: '1.2rem', background: 'white', textAlign: 'center' }}>

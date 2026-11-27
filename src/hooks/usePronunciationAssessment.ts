@@ -167,6 +167,8 @@ export const usePronunciationAssessment = () => {
   const activePushRef = useRef<SpeechSDK.PushAudioInputStream | null>(null);
   // 録音再生用に、流し込んだのと同じ 16kHz PCM を溜めておく。
   const recordedChunksRef = useRef<Float32Array[]>([]);
+  // 録音中に「言い終わった」を押したとき、マイクの流し込みを止める（子どもの声 2026-11-27「マイクstopできるようにして」）
+  const stopRef = useRef<(() => void) | null>(null);
   // 先にもらっておいた次のトークン
   const prefetchRef = useRef<{ at: number; p: Promise<Awaited<ReturnType<typeof fetchAzureSpeechToken>> | Error> } | null>(null);
 
@@ -341,10 +343,17 @@ export const usePronunciationAssessment = () => {
           // ここから processor の音声が pushStream に流れ込む。録音バッファもリセット。
           recordedChunksRef.current = [];
           activePushRef.current = pushStream;
+          // 止める＝ここまでの声で採点する（音の流れを閉じると、Azureはそこまでで判定して返してくる）
+          stopRef.current = () => {
+            if (activePushRef.current !== pushStream) return;
+            activePushRef.current = null;
+            try { pushStream.close(); } catch { /* noop */ }
+          };
         }
 
         const finish = (value: PronunciationResult | null) => {
           activePushRef.current = null;
+          stopRef.current = null;
           // 今回マイクから拾った音を WAV にして、再生できるようにする。
           const chunks = replay || recordedChunksRef.current;
           if (!replay) recordedChunksRef.current = [];
@@ -447,5 +456,8 @@ export const usePronunciationAssessment = () => {
   // 直近の失敗理由（トースト用）。assessがnullを返した直後に呼ぶ。
   const getLastError = () => lastErrorRef.current;
 
-  return { assess, isAssessing, error, isAvailable, lastRecordingUrl, getLastError };
+  /** 録音を止めて、ここまでの声で採点する（録音中でなければ何もしない） */
+  const stopAssess = useCallback(() => { stopRef.current?.(); }, []);
+
+  return { assess, isAssessing, error, isAvailable, lastRecordingUrl, getLastError, stopAssess };
 };
