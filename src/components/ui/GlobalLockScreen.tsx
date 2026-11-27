@@ -50,7 +50,9 @@ export const GlobalLockScreen: React.FC<{ mode: LockMode; lockSetAt?: number | n
     grace = { key: graceKey, path: here, until: isLearningPage ? Date.now() + REFLECTION_GRACE_MS : 0 };
     writeGrace(grace);
   }
-  const graceLeft = grace && grace.path === here ? grace.until - Date.now() : 0;
+  // 猶予は「まだ学習の画面にいるか」で見る（2026-11-25）。同じ活動の中でURLが少し変わっただけで（問題を進める等）
+  // 猶予が消えてロックになっていた。トップ・ふりかえり・ショップ・木に動いたら、そこで猶予はおしまい。
+  const graceLeft = grace && isLearningPage ? grace.until - Date.now() : 0;
   const inGrace = mode === 'reflection' && graceLeft > 0 && localStorage.getItem('studentId') !== STAFF_TEST_ID;
   useEffect(() => {
     if (!inGrace) return;

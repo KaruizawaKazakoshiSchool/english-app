@@ -283,7 +283,7 @@ export const WordPuzzle: React.FC = () => {
             style={{ ...cardStyle,
               borderColor: phase === 'correct' ? 'var(--color-success)' : marks ? (marks[i] ? 'var(--color-success)' : '#ef4444') : '#0984e3',
               background: phase === 'correct' ? '#f0fdf4' : marks ? (marks[i] ? '#f0fdf4' : '#fef2f2') : '#eff6ff' }}>
-            {i === 0 ? c.text.charAt(0).toUpperCase() + c.text.slice(1) : c.text}
+            {c.id === 0 ? c.text.charAt(0).toUpperCase() + c.text.slice(1) : c.text}
           </button>
         ))}
         {level !== 'hard' && Array.from({ length: answer.words.length - placed.length }).map((_, i) => (
