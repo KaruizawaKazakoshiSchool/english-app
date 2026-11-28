@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { WordPic } from '../../ui/WordPic';
 import { useParams, useNavigate } from 'react-router-dom';
 import { type Vocabulary } from '../../../data/vocabulary';
 import { useVocabulary } from '../../../hooks/useVocabulary';
@@ -403,7 +404,7 @@ export const SpellingGame: React.FC = () => {
         )}
         {showAnswerState && (
           <div className="animate-pop text-error" style={{ fontSize: '2.5rem', fontWeight: 'bold', textAlign: 'center' }}>
-            正解は: {targetWord.english} {targetWord.emoji}
+            正解は: {targetWord.english} <WordPic word={targetWord} />
           </div>
         )}
       </div>
@@ -412,7 +413,7 @@ export const SpellingGame: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '1rem', width: '100%' }}>
           {mistakes >= 1 && (
             <div className="animate-pop" style={{ fontSize: '5rem', marginBottom: '1rem' }}>
-              {targetWord.emoji}
+              <WordPic word={targetWord} />
             </div>
           )}
           

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { WordPic } from '../../ui/WordPic';
 import { useParams, useNavigate } from 'react-router-dom';
 import { type Vocabulary } from '../../../data/vocabulary';
 import { useVocabulary } from '../../../hooks/useVocabulary';
@@ -368,7 +369,7 @@ export const QAMode: React.FC = () => {
           {questionText}
         </div>
         
-        <div style={{ fontSize: '5rem', margin: '1rem 0' }}>{targetWord.emoji}</div>
+        <div style={{ fontSize: '5rem', margin: '1rem 0' }}><WordPic word={targetWord} /></div>
         <div style={{ fontSize: '1.5rem', color: '#666' }}>{targetWord.japanese}</div>
       </div>
 

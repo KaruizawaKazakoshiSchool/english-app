@@ -14,6 +14,9 @@ export interface AppUpdate {
 }
 
 export const UPDATES: AppUpdate[] = [
+  { date: '2026-11-28', text: '✏️ 単語の実力テストやクイズでも、消しゴムの絵がスポンジではなく消しゴムになったよ', fromVoice: true },
+  { date: '2026-11-28', text: '🧩 ことばパズルの単元の一覧で「もどる」を押すと、学年を選ぶところにもどるようにしたよ', fromVoice: true },
+  { date: '2026-11-28', text: '📰 はじめて開いた端末で、「最近の更新」が全部 NEW にならないようにしたよ', fromVoice: true },
   { date: '2026-11-28', text: '⏹ 発音チェックで、言い終わったらマイクのボタンを押して止められるようにしたよ（そこまでの声で採点）', fromVoice: true },
   { date: '2026-11-28', text: '⭐ ことばパズルに、一発で正解した数の星が出るようにしたよ', fromVoice: true },
   { date: '2026-11-28', text: '✏️ 消しゴムの絵がスポンジみたいだったので、消しゴムの絵にしたよ（単語を覚える画面）', fromVoice: true },

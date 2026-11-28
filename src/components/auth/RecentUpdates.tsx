@@ -7,6 +7,7 @@ const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) || ''; } ca
 // 「最近の更新」。最初は新しい3件だけ、「もっと見る」で全部。
 // compact（トップ画面用）：まだ見ていない更新があるときだけ開いて🆕を付ける。見たものは1行にたたむ。
 // Googleで入ると名前を選ぶ画面を通らず、更新が見られなくなっていた（2026-11-27 子どもの声）。
+// はじめての端末ではNEWを付けない（全部NEWになる＝「全部newなのが気になります」2026-11-28）。
 export const RecentUpdates: React.FC<{ compact?: boolean }> = ({ compact }) => {
   const [seen] = useState(readSeen);
   const newOnes = UPDATES.filter(u => u.date > seen);
@@ -43,7 +44,7 @@ export const RecentUpdates: React.FC<{ compact?: boolean }> = ({ compact }) => {
           <li key={i} style={{ display: 'flex', gap: '0.6rem', fontSize: '0.92rem', alignItems: 'baseline' }}>
             <span style={{ color: '#94a3b8', minWidth: '2.8rem' }}>{md(u.date)}</span>
             <span style={{ flex: 1 }}>
-              {compact && u.date > seen && <span style={{ marginRight: '0.3rem', fontSize: '0.75rem', fontWeight: 'bold', color: 'white', background: '#ef4444', borderRadius: '999px', padding: '0.05rem 0.45rem' }}>NEW</span>}
+              {compact && seen && u.date > seen && <span style={{ marginRight: '0.3rem', fontSize: '0.75rem', fontWeight: 'bold', color: 'white', background: '#ef4444', borderRadius: '999px', padding: '0.05rem 0.45rem' }}>NEW</span>}
               {u.text}
               {u.fromVoice && (
                 <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', fontWeight: 'bold', color: '#b45309',

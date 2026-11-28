@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { WordPic } from '../ui/WordPic';
 import { useNavigate } from 'react-router-dom';
 import { useVocabulary } from '../../hooks/useVocabulary';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
@@ -157,7 +158,7 @@ export const SkillTest: React.FC = () => {
           <>
             <p style={{ margin: 0, fontSize: '1.1rem', color: '#666' }}>この意味の英語を選ぼう</p>
             {/* 数の単元は絵文字と意味がどちらも「50」なので、同じなら1回だけ出す（子どもの声 2026-10-17「50 50って二つ」） */}
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{q.word.emoji === q.word.japanese ? q.word.japanese : `${q.word.emoji} ${q.word.japanese}`}</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{q.word.emoji === q.word.japanese ? q.word.japanese : <><WordPic word={q.word} /> {q.word.japanese}</>}</div>
           </>
         )}
       </div>

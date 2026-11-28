@@ -175,7 +175,8 @@ export const WordPuzzle: React.FC = () => {
     return (
       <div className="flex-col gap-lg" style={{ flex: 1, padding: '2rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Button variant="outline" onClick={() => navigate('/home')} icon={ArrowLeft}>もどる</Button>
+          {/* 単元の一覧からの「もどる」は学年えらびへ（子どもの声 2026-11-28） */}
+          <Button variant="outline" onClick={() => setParams({})} icon={ArrowLeft}>もどる</Button>
           <h2 className="text-primary" style={{ margin: 0, flex: 1, textAlign: 'center', marginRight: '120px' }}>🧩 {grade}年生のことばパズル</h2>
         </div>
         <p style={{ margin: 0, color: '#475569', textAlign: 'center' }}>

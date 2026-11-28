@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { WordPic } from '../ui/WordPic';
 import { playClip, stopAllSound } from '../../lib/playOne';
 import { Button } from '../ui/Button';
 import { Volume2, Volume2 as VolOn, VolumeX, RefreshCw, Play } from 'lucide-react';
@@ -7,6 +8,7 @@ import { getPreferredVoice } from '../../lib/voice';
 export interface TypingWord {
   text: string;
   emoji?: string;
+  imageUrl?: string;
 }
 
 interface TypingTrainerProps {
@@ -231,7 +233,7 @@ export const TypingTrainer: React.FC<TypingTrainerProps> = ({ words, speakWord, 
 
       {/* お題の単語 */}
       <div className="flex-col flex-center" style={{ gap: '0.5rem', minHeight: '160px' }}>
-        {current?.emoji && <div style={{ fontSize: '3.5rem' }}>{current.emoji}</div>}
+        {(current?.emoji || current?.imageUrl) && <div style={{ fontSize: '3.5rem' }}><WordPic word={current} /></div>}
         <div style={{ display: 'flex', gap: '0.1rem', fontFamily: 'var(--font-heading)', fontSize: '3.5rem' }}>
           {current?.text.split('').map((ch, i) => {
             const done = i < cursor;

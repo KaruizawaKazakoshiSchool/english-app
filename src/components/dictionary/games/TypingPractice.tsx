@@ -16,7 +16,7 @@ export const TypingPractice: React.FC = () => {
   const words = React.useMemo(
     () => vocabulary
       .filter(v => v.category === decodedCategory)
-      .map(v => ({ text: v.english, emoji: v.emoji })),
+      .map(v => ({ text: v.english, emoji: v.emoji, imageUrl: v.imageUrl })),
     [decodedCategory, vocabulary]
   );
 

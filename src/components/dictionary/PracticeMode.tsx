@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { WordPic } from '../ui/WordPic';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { type Vocabulary } from '../../data/vocabulary';
 import { useVocabulary } from '../../hooks/useVocabulary';
@@ -359,7 +360,7 @@ export const PracticeMode: React.FC = () => {
         )}
         {showAnswerState && (
           <div className="animate-pop text-error" style={{ fontSize: '2.5rem', fontWeight: 'bold', textAlign: 'center' }}>
-            正解は: {targetWord.english} {targetWord.emoji}
+            正解は: {targetWord.english} <WordPic word={targetWord} />
           </div>
         )}
       </div>
@@ -380,7 +381,7 @@ export const PracticeMode: React.FC = () => {
               onClick={() => handleOptionClick(opt)}
             >
               {!isHard && mistakes >= 1 && (
-                <div className="animate-pop" style={{ fontSize: '4rem', marginBottom: '1rem' }}>{opt.emoji}</div>
+                <div className="animate-pop" style={{ fontSize: '4rem', marginBottom: '1rem' }}><WordPic word={opt} /></div>
               )}
               <h2 style={{ fontSize: isHard ? '1.4rem' : '1.8rem', margin: 0, fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', textAlign: 'center', wordBreak: 'break-word' }}>
                 {opt.english}

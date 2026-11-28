@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WordPic } from '../../ui/WordPic';
 import { stopAllSound, isCurrent } from '../../../lib/playOne';
 import { ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
 import { Button } from '../../ui/Button';
@@ -758,7 +759,7 @@ ${SAFETY_INSTRUCTION}`;
                         opacity: isUsed ? 0.5 : 1
                       }}
                     >
-                      <span>{word.emoji}</span>
+                      <span><WordPic word={word} /></span>
                       <span>{word.english}</span>
                       <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>({word.japanese})</span>
                     </button>

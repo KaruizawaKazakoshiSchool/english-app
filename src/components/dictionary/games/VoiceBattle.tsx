@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { WordPic } from '../../ui/WordPic';
 import { useParams, useNavigate } from 'react-router-dom';
 import { type Vocabulary } from '../../../data/vocabulary';
 import { useVocabulary } from '../../../hooks/useVocabulary';
@@ -321,7 +322,7 @@ export const VoiceBattle: React.FC = () => {
 
         {monsterState === 'idle' && (
           <>
-            <div style={{ fontSize: '4rem', margin: '1rem 0' }}>{targetWord.emoji}</div>
+            <div style={{ fontSize: '4rem', margin: '1rem 0' }}><WordPic word={targetWord} /></div>
             <h2 style={{ fontSize: '2.5rem', margin: 0, fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               {targetWord.english}
             </h2>
